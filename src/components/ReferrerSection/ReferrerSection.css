@@ -1,0 +1,216 @@
+.referrer-activation-section,
+.referrer-info-section {
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.referrer-info-section h2,
+.referrer-info-card h2 {
+  color: #ffd700;
+  margin: 0 0 1rem;
+  text-align: center;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.referrer-info-card {
+  background: rgba(25, 25, 25, 0.95);
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  width: 100%;
+}
+
+.fee-display {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.fee-amount {
+  display: block;
+  font-size: 2rem;
+  color: #4CAF50;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.fee-label {
+  display: block;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.referrer-info-card p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.activate-button {
+  background: linear-gradient(45deg, #4a90e2, #357abd);
+  color: white;
+  border: none;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 1rem;
+}
+
+.activate-button:hover {
+  background: linear-gradient(45deg, #357abd, #4a90e2);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+}
+
+.referral-link-input-group {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+  align-items: center;
+}
+
+.referral-link-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0 0.8rem;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  height: 32px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 32px;
+}
+
+.copy-button {
+  background: linear-gradient(45deg, #4a90e2, #357abd);
+  color: white;
+  border: none;
+  padding: 0 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  height: 32px;
+  min-width: 90px;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  line-height: 32px;
+}
+
+.copy-button:hover {
+  background: linear-gradient(45deg, #357abd, #4a90e2);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+}
+
+.copy-button.success {
+  background: linear-gradient(45deg, #4CAF50, #45a049);
+}
+
+.commission-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.commission-stat-card {
+  background: rgba(25, 25, 25, 0.95);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.commission-stat-card h3 {
+  color: #ffd700;
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.commission-stat-card p {
+  font-size: 1.5rem;
+  color: #4CAF50;
+  margin: 0 0 0.75rem;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.claim-button {
+  background: linear-gradient(45deg, #4CAF50, #45a049);
+  color: white;
+  border: none;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+}
+
+.claim-button:hover {
+  background: linear-gradient(45deg, #45a049, #4CAF50);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+}
+
+@media (max-width: 768px) {
+  .referral-link-input-group {
+    flex-direction: column;
+    max-width: 100%;
+  }
+
+  .copy-button {
+    width: 100%;
+    padding: 0.6rem;
+    height: 36px;
+  }
+
+  .fee-amount {
+    font-size: 1.75rem;
+  }
+
+  .commission-stats {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .commission-stat-card {
+    padding: 1rem;
+  }
+
+  .commission-stat-card h3 {
+    font-size: 1rem;
+  }
+
+  .commission-stat-card p {
+    font-size: 1.25rem;
+  }
+} 

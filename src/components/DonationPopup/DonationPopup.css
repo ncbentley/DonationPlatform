@@ -1,0 +1,207 @@
+.popup-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup {
+  background: rgba(25, 25, 25, 0.95);
+  border-radius: 12px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.popup h2 {
+  color: #ffd700;
+  text-align: center;
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.balance-display {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.balance-display p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+}
+
+.popup-details {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.popup-details p {
+  margin: 0.5rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  width: 100%;
+}
+
+.popup-field {
+  margin-bottom: 1.5rem;
+}
+
+.popup-field label {
+  display: block;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.sponsor-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.radio-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.radio-buttons label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+
+.radio-buttons input[type="radio"] {
+  margin: 0;
+}
+
+.summary-grid {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  margin: 0.75rem 0;
+}
+
+.summary-grid p {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem auto;
+  max-width: 300px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.summary-grid span {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.error-message {
+  color: #ff6b6b;
+  text-align: center;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.popup-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.popup-actions button {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.popup-actions button:first-child {
+  background: linear-gradient(45deg, #4a90e2, #357abd);
+  color: white;
+}
+
+.popup-actions button:first-child:hover:not(:disabled) {
+  background: linear-gradient(45deg, #357abd, #4a90e2);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+}
+
+.popup-actions button:last-child {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.popup-actions button:last-child:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.popup-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.popup-actions button.insufficient-balance {
+  background: linear-gradient(45deg, #666666, #444444);
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .popup {
+    padding: 1.5rem;
+    width: 95%;
+  }
+
+  .popup-actions {
+    flex-direction: column;
+  }
+
+  .radio-buttons {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.popup-details h3 {
+  color: #ffd700;
+  text-align: center;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+ 
