@@ -122,7 +122,7 @@ function App() {
         const userDetails = await contract.methods.getUserDetails().call({ from: account });
         
         if (userDetails) {
-          const donationAmount = parseInt(userDetails[0]) / 10**6;
+          const donationAmount = parseInt(userDetails[0]) / 10**18;
           const donationPlan = parseInt(userDetails[1]);
           
           setMyDonation(donationAmount);
@@ -133,7 +133,7 @@ function App() {
           
           if (nextReward) {
             const timestamp = parseInt(nextReward[1]);
-            const amount = parseInt(nextReward[0]) / 10**6;
+            const amount = parseInt(nextReward[0]) / 10**18;
 
             if (timestamp > 0) {
               setNextRewardDate(timestamp * 1000);
@@ -146,8 +146,8 @@ function App() {
 
           const totalInvestedAmount = await contract.methods.totalDonated().call();
           const totalPaidOutAmount = await contract.methods.totalPaid().call();
-          setTotalDonated(parseInt(totalInvestedAmount) / 10**6);
-          setTotalPaidOut(parseInt(totalPaidOutAmount) / 10**6);
+          setTotalDonated(parseInt(totalInvestedAmount) / 10**18);
+          setTotalPaidOut(parseInt(totalPaidOutAmount) / 10**18);
         }
       } catch (error) {
         console.error('Error loading user data:', error);
