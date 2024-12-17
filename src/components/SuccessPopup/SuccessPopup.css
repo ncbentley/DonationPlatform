@@ -1,0 +1,19 @@
+.success-message {
+  text-align: center;
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 8px;
+  color: #4CAF50;
+}
+
+.success-message a {
+  display: inline-block;
+  margin-top: 10px;
+  color: #81c784;
+  text-decoration: none;
+}
+
+.success-message a:hover {
+  text-decoration: underline;
+} 

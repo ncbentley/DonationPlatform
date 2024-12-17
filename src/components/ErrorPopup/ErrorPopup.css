@@ -1,0 +1,55 @@
+.error-popup {
+  background: rgba(34, 34, 34, 0.95);
+  border: 2px solid #ff6b6b;
+  border-radius: 10px;
+  padding: 2rem;
+  width: 400px;
+  max-width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: shake 0.5s ease-in-out;
+}
+
+.error-popup h2 {
+  color: #ff6b6b;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.error-message {
+  color: #fff;
+  margin: 1rem 0;
+  line-height: 1.5;
+  font-size: 1rem;
+}
+
+.error-popup .popup-actions {
+  margin-top: 1.5rem;
+}
+
+.error-popup button {
+  background: transparent;
+  border: 2px solid #ff6b6b;
+  color: #ff6b6b;
+  padding: 0.75rem 2rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.error-popup button:hover {
+  background: #ff6b6b;
+  color: #fff;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+} 
