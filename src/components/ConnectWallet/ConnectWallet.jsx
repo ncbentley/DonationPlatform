@@ -6,6 +6,7 @@ import coinbaseModule from '@web3-onboard/coinbase';
 import torusModule from '@web3-onboard/torus';
 import trustModule from '@web3-onboard/trust';
 import walletLinkModule from '@web3-onboard/walletlink';
+import safeModule from '@web3-onboard/gnosis';
 import './ConnectWallet.css';
 
 // Initialize wallet modules
@@ -23,7 +24,6 @@ const walletLink = walletLinkModule();
 const web3Onboard = init({
   wallets: [
     injected,
-    walletConnect,
     coinbase,
     torus,
     trust,
