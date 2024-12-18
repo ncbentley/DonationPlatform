@@ -1,4 +1,5 @@
 import React from 'react';
+import { Buffer } from 'buffer';
 import { init, useConnectWallet } from '@web3-onboard/react';
 import injectedModule from '@web3-onboard/injected-wallets';
 import walletConnectModule from '@web3-onboard/walletconnect';
@@ -8,6 +9,9 @@ import trustModule from '@web3-onboard/trust';
 import walletLinkModule from '@web3-onboard/walletlink';
 import safeModule from '@web3-onboard/gnosis';
 import './ConnectWallet.css';
+
+// Add Buffer to window object
+window.Buffer = window.Buffer || Buffer;
 
 // Initialize wallet modules
 const injected = injectedModule();
