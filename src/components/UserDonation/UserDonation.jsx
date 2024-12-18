@@ -47,9 +47,9 @@ const UserDonation = ({
     if (plan === 4) {
       return (
         <>
-          <p>• First 3 rewards: ${(amount * 0.5).toLocaleString()} every 120 days</p>
-          <p>• Then ${(amount * 0.3).toLocaleString()} every 30 days for 24 rewards</p>
-          <p>• Total benefits: ${(amount * 8.7).toLocaleString()} over 3 years</p>
+          <p>• First 3 rewards: Up to ${((amount * 0.5) * 3).toLocaleString()} every 120 days</p>
+          <p>• Then Up to ${(amount * 0.3).toLocaleString()} every 30 days for 24 rewards</p>
+          <p>• Total benefits: Up to ${(amount * 8.7).toLocaleString()} over 3 years</p>
         </>
       );
     }
@@ -57,9 +57,9 @@ const UserDonation = ({
     else if (plan === 6) {
       return (
         <>
-          <p>• First 2 rewards: ${(amount * 0.75).toLocaleString()} every 180 days</p>
-          <p>• Then ${(amount * 0.45).toLocaleString()} every 30 days for 24 rewards</p>
-          <p>• Total benefits: ${(amount * 12.3).toLocaleString()} over 3 years</p>
+          <p>• First 2 rewards: Up to ${((amount * 0.75) * 2).toLocaleString()} every 180 days</p>
+          <p>• Then Up to ${(amount * 0.45).toLocaleString()} every 30 days for 24 rewards</p>
+          <p>• Total benefits: Up to ${(amount * 12.3).toLocaleString()} over 3 years</p>
         </>
       );
     }
@@ -67,9 +67,9 @@ const UserDonation = ({
     else if (plan === 12) {
       return (
         <>
-          <p>• First reward: ${(amount * 1.5).toLocaleString()} after 360 days</p>
-          <p>• Then ${(amount * 0.6).toLocaleString()} every 30 days for 24 rewards</p>
-          <p>• Total benefits: ${(amount * 15.9).toLocaleString()} over 3 years</p>
+          <p>• First reward: Up to ${(amount * 1.5).toLocaleString()} after 360 days</p>
+          <p>• Then Up to ${(amount * 0.6).toLocaleString()} every 30 days for 24 rewards</p>
+          <p>• Total benefits: Up to ${(amount * 15.9).toLocaleString()} over 3 years</p>
         </>
       );
     }
@@ -135,7 +135,7 @@ const UserDonation = ({
             <div className="amount-display">
               <span className="amount">${myDonation.toLocaleString()}</span>
               <span className="plan">{myDonationPlan} Month Plan</span>
-              <span className="total-return">Total Benefits: ${getTotalReturn(myDonationPlan, myDonation).toLocaleString()}</span>
+              <span className="total-return">Total Benefits: Up to ${getTotalReturn(myDonationPlan, myDonation).toLocaleString()}</span>
             </div>
           </div>
           <div className="card-content">
