@@ -44,8 +44,6 @@ const web3Onboard = init({
   ],
   appMetadata: {
     name: 'True Wealth Prosperity Network',
-    icon: '/images/twpn-logo.png',
-    logo: '/images/twpn-logo.png',
     description: 'True Wealth Prosperity Network DApp',
     explore: `https://bscscan.com/address/0xa9B93C2d44472bb47fF7126Bca0c0051Ae5100D3`
   },

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './ReferrerSection.css';
+import ErrorPopup from '../ErrorPopup/ErrorPopup';
+import TransactionConfirmPopup from '../TransactionConfirmPopup/TransactionConfirmPopup';
 
 const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
   const [copySuccess, setCopySuccess] = useState(false);
@@ -7,13 +9,17 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
   const [commissionsEarned, setCommissionsEarned] = useState(0);
   const [commissionsPaid, setCommissionsPaid] = useState(0);
   const [claimableCommission, setClaimableCommission] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showError, setShowError] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingTransaction, setPendingTransaction] = useState(null);
 
   useEffect(() => {
     const fetchReferrerData = async () => {
       if (contract && contract.methods) {
         try {
           const fee = await contract.methods.referrerFeeUsd().call();
-          setReferrerFee(parseInt(fee) / 10**6);
+          setReferrerFee(parseInt(fee) / 10**18);
 
           if (isReferrer) {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -21,9 +27,9 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
             
             const { earned, paid } = await contract.methods.getCommissionDetails(userAddress).call();
             const claimable = earned - paid;
-            setCommissionsEarned(parseInt(earned) / 10**6);
-            setCommissionsPaid(parseInt(paid) / 10**6);
-            setClaimableCommission(parseInt(claimable) / 10**6);
+            setCommissionsEarned(parseInt(earned) / 10**18);
+            setCommissionsPaid(parseInt(paid) / 10**18);
+            setClaimableCommission(parseInt(claimable) / 10**18);
           }
         } catch (error) {
           console.error('Failed to fetch referrer data:', error);
@@ -42,10 +48,41 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
       // Refresh the data after claiming
       const claimable = await contract.methods.claimableCommission(accounts[0]).call();
       const paid = await contract.methods.totalCommissionPaid(accounts[0]).call();
-      setClaimableCommission(parseInt(claimable) / 10**6);
-      setCommissionsPaid(parseInt(paid) / 10**6);
+      setClaimableCommission(parseInt(claimable) / 10**18);
+      setCommissionsPaid(parseInt(paid) / 10**18);
     } catch (error) {
       console.error('Failed to claim commission:', error);
+      setErrorMessage(error.message || 'Failed to claim commission');
+      setShowError(true);
+    }
+  };
+
+  const handleActivateReferrerWithError = async () => {
+    try {
+      setPendingTransaction({
+        type: 'activateReferrer',
+        details: {
+          amount: referrerFee,
+          totalAmount: referrerFee
+        }
+      });
+      setShowConfirm(true);
+    } catch (error) {
+      console.error('Failed to activate referrer:', error);
+      setErrorMessage(error.message || 'Failed to activate referrer');
+      setShowError(true);
+    }
+  };
+
+  const proceedWithActivation = async () => {
+    try {
+      await handleActivateReferrer();
+      setShowConfirm(false);
+    } catch (error) {
+      console.error('Failed to activate referrer:', error);
+      setErrorMessage(error.message || 'Failed to activate referrer');
+      setShowError(true);
+      setShowConfirm(false);
     }
   };
 
@@ -73,10 +110,27 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
             <span className="fee-label">Activation Fee</span>
           </div>
           <p>Activate your referral link to start earning commissions from referrals.</p>
-          <button onClick={handleActivateReferrer} className="activate-button">
+          <button onClick={handleActivateReferrerWithError} className="activate-button">
             ACTIVATE REFERRAL LINK
           </button>
         </div>
+        {showError && (
+          <ErrorPopup
+            message={errorMessage}
+            onClose={() => setShowError(false)}
+          />
+        )}
+        {showConfirm && (
+          <TransactionConfirmPopup
+            type="activateReferrer"
+            details={pendingTransaction.details}
+            onConfirm={proceedWithActivation}
+            onCancel={() => {
+              setShowConfirm(false);
+              setPendingTransaction(null);
+            }}
+          />
+        )}
       </div>
     );
   }
@@ -119,6 +173,12 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
           )}
         </div>
       </div>
+      {showError && (
+        <ErrorPopup
+          message={errorMessage}
+          onClose={() => setShowError(false)}
+        />
+      )}
     </div>
   );
 };

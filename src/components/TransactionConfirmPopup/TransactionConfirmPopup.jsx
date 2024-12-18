@@ -41,8 +41,41 @@ const TransactionConfirmPopup = ({ type, details, contractAddress, onConfirm, on
           </div>
         </div>
       );
+    } else if (type === 'activateReferrer') {
+      return (
+        <div className="transaction-details">
+          <h3>Transaction Steps:</h3>
+          <ol className="transaction-steps">
+            <li>
+              Approve the contract to spend ${details.totalAmount.toFixed(2)} USDT
+              <div className="step-details">
+                This allows the contract to transfer the activation fee from your wallet
+              </div>
+            </li>
+            <li>
+              Call the contract's activateReferrer function
+              <div className="step-details">
+                This activates your referral link and enables you to earn commissions from referrals
+              </div>
+            </li>
+          </ol>
+
+          <div className="summary-section">
+            <h3>Transaction Summary</h3>
+            <div className="summary-grid">
+              <div className="summary-item">
+                <div className="summary-label">Activation Fee:</div>
+                <div className="summary-value">${details.amount.toFixed(2)}</div>
+              </div>
+              <div className="summary-item">
+                <div className="summary-label">Total USDT:</div>
+                <div className="summary-value">${details.totalAmount.toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
     }
-    // Add other transaction types here if needed
     return null;
   };
 

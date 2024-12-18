@@ -55,7 +55,7 @@ const DonationPopup = ({
       if (!accounts.length) return;
 
       const balance = await usdtContract.methods.balanceOf(accounts[0]).call();
-      const balanceInUsd = parseInt(balance) / 10**6; // Convert from USDT decimals
+      const balanceInUsd = parseInt(balance) / 10**18; // Convert from USDT decimals
       setUsdtBalance(balanceInUsd);
 
       // Check if balance is sufficient for donation + fee
@@ -129,8 +129,8 @@ const DonationPopup = ({
       const userAccount = accounts[0];
 
       // Calculate amounts in USDT decimals (6 decimals)
-      const baseAmount = (donationAmount * 10**6).toFixed(0);  // Remove any decimals
-      const totalAmount = (donationAmount * 1.03 * 10**6).toFixed(0); // Include 3% fee
+      const baseAmount = (donationAmount * 10**18).toFixed(0);  // Remove any decimals
+      const totalAmount = (donationAmount * 1.03 * 10**18).toFixed(0); // Include 3% fee
 
       if (!usdtContract || !usdtContract.methods) {
         throw new Error("USDT contract not initialized. Please wait for wallet connection to complete.");
