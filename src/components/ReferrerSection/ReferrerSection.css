@@ -213,4 +213,70 @@
   .commission-stat-card p {
     font-size: 1.25rem;
   }
-} 
+}
+
+.referral-tree-section {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.referral-tree {
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
+.referral-tree ul {
+  list-style: none;
+  padding-left: 2rem;
+}
+
+.referral-node {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.referral-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1rem;
+  border-left-width: 3px;
+  border-left-style: solid;
+  margin-left: 0.5rem;
+}
+
+.referral-info .address {
+  font-family: monospace;
+  color: #00ff9d;
+}
+
+.referral-info .stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.referrer-badge {
+  background: #00ff9d;
+  color: #000;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.loading-tree {
+  text-align: center;
+  padding: 2rem;
+  color: #ccc;
+}
+
+.referral-level-0 > li > .referral-info { border-left-color: #00ff9d; }
+.referral-level-1 > li > .referral-info { border-left-color: #00ccff; }
+.referral-level-2 > li > .referral-info { border-left-color: #ff00ff; }
+.referral-level-3 > li > .referral-info { border-left-color: #ffcc00; } 

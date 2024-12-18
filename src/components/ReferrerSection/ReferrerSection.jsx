@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './ReferrerSection.css';
 import ErrorPopup from '../ErrorPopup/ErrorPopup';
 import TransactionConfirmPopup from '../TransactionConfirmPopup/TransactionConfirmPopup';
@@ -13,6 +13,10 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
   const [showError, setShowError] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingTransaction, setPendingTransaction] = useState(null);
+  const [referralTree, setReferralTree] = useState(null);
+  const [loadingTree, setLoadingTree] = useState(false);
+  const [donorCache, setDonorCache] = useState(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   useEffect(() => {
     const fetchReferrerData = async () => {
@@ -100,6 +104,150 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
     }
   };
 
+  const initializeDonorCache = useCallback(async () => {
+    try {
+      let donors = [];
+      let count = 0;
+      
+      while (true) {
+        try {
+          const donorAddress = await contract.methods.donors(count).call();
+          const userData = await contract.methods.users(donorAddress).call();
+          const referrerData = await contract.methods.referrers(donorAddress).call();
+          const userDetails = await contract.methods.getUserDetails().call({ from: donorAddress });
+
+          donors.push({
+            address: donorAddress,
+            sponsor: userData.sponsor,
+            donation: parseInt(userDetails[0]) / 10**18,
+            isReferrer: referrerData.isActive,
+            rewardsReceived: parseInt(userDetails.totalWithdrawn) / 10**18
+          });
+          
+          if (count % 10 === 0) {
+            setLoadingProgress(count);
+          }
+          
+          count++;
+        } catch {
+          break;
+        }
+      }
+      
+      return donors;
+    } catch (error) {
+      return null;
+    }
+  }, [contract]);
+
+  const fetchReferralTree = useCallback(async (address, level = 0, maxLevel = 4, cache = null) => {
+    if (level >= maxLevel) {
+      return null;
+    }
+    
+    try {
+      const donors = cache || donorCache;
+      
+      if (!donors) {
+        return null;
+      }
+      
+      const directReferrals = donors
+        .filter(donor => donor.sponsor.toLowerCase() === address.toLowerCase())
+        .map(async (donor) => {
+          const childReferrals = await fetchReferralTree(donor.address, level + 1, maxLevel, donors);
+          
+          return {
+            address: donor.address,
+            donation: donor.donation,
+            isReferrer: donor.isReferrer,
+            rewardsReceived: donor.rewardsReceived,
+            children: childReferrals || []
+          };
+        });
+
+      const resolvedReferrals = await Promise.all(directReferrals);
+      return resolvedReferrals;
+    } catch (error) {
+      return null;
+    }
+  }, [donorCache]);
+
+  useEffect(() => {
+    const loadReferralTree = async () => {
+      if (contract && isReferrer) {
+        setLoadingTree(true);
+        
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const userAddress = accounts[0];
+          
+          const cache = await initializeDonorCache();
+          setDonorCache(cache);
+          
+          if (!cache) {
+            throw new Error('Failed to initialize donor cache');
+          }
+          
+          const tree = await fetchReferralTree(userAddress, 0, 4, cache);
+          setReferralTree(tree);
+        } catch (error) {
+          setErrorMessage(error.message || 'Failed to load referral tree');
+          setShowError(true);
+        }
+        setLoadingTree(false);
+      }
+    };
+
+    loadReferralTree();
+  }, [contract, isReferrer, initializeDonorCache, fetchReferralTree]);
+
+  const renderReferralTree = (nodes, level = 0) => {
+    if (!nodes || nodes.length === 0) return null;
+
+    return (
+      <ul className={`referral-level-${level}`}>
+        {nodes.map((node, index) => (
+          <li key={node.address} className="referral-node">
+            <div className="referral-info">
+              <div className="address">
+                {node.address.slice(0, 6)}...{node.address.slice(-4)}
+              </div>
+              <div className="stats">
+                <span>Donation: ${node.donation.toFixed(2)}</span>
+                <span>Earned: ${node.rewardsReceived.toFixed(2)}</span>
+                {node.isReferrer && <span className="referrer-badge">Referrer</span>}
+              </div>
+            </div>
+            {renderReferralTree(node.children, level + 1)}
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
+  const referralTreeSection = (
+    <div className="referral-tree-section">
+      <h3>Your Referral Network</h3>
+      {loadingTree ? (
+        <div className="loading-tree">
+          <div>Loading referral network...</div>
+          {loadingProgress > 0 && (
+            <div className="loading-progress">
+              Cached {loadingProgress} donors
+            </div>
+          )}
+        </div>
+      ) : referralTree ? (
+        <div className="referral-tree">
+          {renderReferralTree(referralTree)}
+        </div>
+      ) : (
+        <p>No referrals found</p>
+      )}
+    </div>
+  );
+
   if (!isReferrer) {
     return (
       <div className="referrer-activation-section">
@@ -179,6 +327,7 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
           onClose={() => setShowError(false)}
         />
       )}
+      {isReferrer && referralTreeSection}
     </div>
   );
 };
