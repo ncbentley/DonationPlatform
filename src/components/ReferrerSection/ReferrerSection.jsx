@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ReferrerSection.css';
 import ErrorPopup from '../ErrorPopup/ErrorPopup';
 import TransactionConfirmPopup from '../TransactionConfirmPopup/TransactionConfirmPopup';
@@ -104,7 +104,7 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
     }
   };
 
-  const initializeDonorCache = useCallback(async () => {
+  const initializeDonorCache = async () => {
     try {
       let donors = [];
       let count = 0;
@@ -138,9 +138,9 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
     } catch (error) {
       return null;
     }
-  }, [contract]);
+  };
 
-  const fetchReferralTree = useCallback(async (address, level = 0, maxLevel = 4, cache = null) => {
+  const fetchReferralTree = async (address, level = 0, maxLevel = 4, cache = null) => {
     if (level >= maxLevel) {
       return null;
     }
@@ -171,7 +171,7 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
     } catch (error) {
       return null;
     }
-  }, [donorCache]);
+  };
 
   useEffect(() => {
     const loadReferralTree = async () => {
@@ -200,7 +200,7 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
     };
 
     loadReferralTree();
-  }, [contract, isReferrer, initializeDonorCache, fetchReferralTree]);
+  }, [contract, isReferrer]);
 
   const renderReferralTree = (nodes, level = 0) => {
     if (!nodes || nodes.length === 0) return null;
