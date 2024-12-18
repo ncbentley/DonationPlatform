@@ -111,6 +111,22 @@ const ConnectWallet = ({ onConnected }) => {
       }
 
       onConnected(address);
+
+      // Add account change listener
+      const handleAccountsChanged = (accounts) => {
+        if (accounts.length > 0) {
+          onConnected(accounts[0].address);
+        }
+      };
+
+      // Listen for account changes using the provider's events
+      if (wallet.provider.on) {
+        wallet.provider.on('accountsChanged', handleAccountsChanged);
+
+        return () => {
+          wallet.provider.removeListener('accountsChanged', handleAccountsChanged);
+        };
+      }
     }
   }, [wallet, onConnected]);
 
