@@ -48,7 +48,7 @@ const UserDonation = ({
       return (
         <>
           <p>• First 3 rewards: Up to ${((amount * 0.5) * 3).toLocaleString()} every 120 days</p>
-          <p>• Then Up to ${(amount * 0.3).toLocaleString()} every 30 days for 24 rewards</p>
+          <p>• Then Up to ${(amount * 0.3).toLocaleString()} every 30 days for 24 months</p>
           <p>• Total benefits: Up to ${(amount * 8.7).toLocaleString()} over 3 years</p>
         </>
       );
@@ -58,7 +58,7 @@ const UserDonation = ({
       return (
         <>
           <p>• First 2 rewards: Up to ${((amount * 0.75) * 2).toLocaleString()} every 180 days</p>
-          <p>• Then Up to ${(amount * 0.45).toLocaleString()} every 30 days for 24 rewards</p>
+          <p>• Then Up to ${(amount * 0.45).toLocaleString()} every 30 days for 24 months</p>
           <p>• Total benefits: Up to ${(amount * 12.3).toLocaleString()} over 3 years</p>
         </>
       );
@@ -68,7 +68,7 @@ const UserDonation = ({
       return (
         <>
           <p>• First reward: Up to ${(amount * 1.5).toLocaleString()} after 360 days</p>
-          <p>• Then Up to ${(amount * 0.6).toLocaleString()} every 30 days for 24 rewards</p>
+          <p>• Then Up to ${(amount * 0.6).toLocaleString()} every 30 days for 24 months</p>
           <p>• Total benefits: Up to ${(amount * 15.9).toLocaleString()} over 3 years</p>
         </>
       );
