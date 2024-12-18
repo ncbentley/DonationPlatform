@@ -17,6 +17,7 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
   const [loadingTree, setLoadingTree] = useState(false);
   const [donorCache, setDonorCache] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [expandedNodes, setExpandedNodes] = useState(new Set());
 
   useEffect(() => {
     const fetchReferrerData = async () => {
@@ -202,24 +203,59 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
     loadReferralTree();
   }, [contract, isReferrer]);
 
+  useEffect(() => {
+    if (referralTree) {
+      const allAddresses = new Set();
+      const addAllAddresses = (nodes) => {
+        nodes?.forEach(node => {
+          allAddresses.add(node.address);
+          addAllAddresses(node.children);
+        });
+      };
+      addAllAddresses(referralTree);
+      setExpandedNodes(allAddresses);
+    }
+  }, [referralTree]);
+
+  const toggleNode = (address) => {
+    setExpandedNodes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(address)) {
+        newSet.delete(address);
+      } else {
+        newSet.add(address);
+      }
+      return newSet;
+    });
+  };
+
   const renderReferralTree = (nodes, level = 0) => {
     if (!nodes || nodes.length === 0) return null;
 
     return (
       <ul className={`referral-level-${level}`}>
-        {nodes.map((node, index) => (
+        {nodes.map((node) => (
           <li key={node.address} className="referral-node">
-            <div className="referral-info">
-              <div className="address">
-                {node.address.slice(0, 6)}...{node.address.slice(-4)}
-              </div>
-              <div className="stats">
-                <span>Donation: ${node.donation.toFixed(2)}</span>
-                <span>Earned: ${node.rewardsReceived.toFixed(2)}</span>
-                {node.isReferrer && <span className="referrer-badge">Referrer</span>}
+            <div 
+              className="referral-info"
+              onClick={() => node.children?.length > 0 && toggleNode(node.address)}
+            >
+              <div className="referral-header">
+                <div className="referral-content">
+                  <div className="address">
+                    {node.address.slice(0, 6)}...{node.address.slice(-4)}
+                  </div>
+                  <div className="stats">
+                    <span>Donation: ${node.donation.toFixed(2)}</span>
+                    <span>Earned: ${node.rewardsReceived.toFixed(2)}</span>
+                    {node.isReferrer && <span className="referrer-badge">Referrer</span>}
+                  </div>
+                </div>
               </div>
             </div>
-            {renderReferralTree(node.children, level + 1)}
+            {node.children && node.children.length > 0 && expandedNodes.has(node.address) && (
+              renderReferralTree(node.children, level + 1)
+            )}
           </li>
         ))}
       </ul>

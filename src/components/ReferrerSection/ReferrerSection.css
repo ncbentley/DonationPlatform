@@ -230,14 +230,21 @@
 .referral-tree ul {
   list-style: none;
   padding-left: 2rem;
+  margin: 0;
+  overflow: hidden;
 }
 
 .referral-node {
-  margin: 1rem 0;
-  padding: 1rem;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.referral-node:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .referral-info {
@@ -248,6 +255,9 @@
   border-left-width: 3px;
   border-left-style: solid;
   margin-left: 0.5rem;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .referral-info .address {
@@ -279,4 +289,21 @@
 .referral-level-0 > li > .referral-info { border-left-color: #00ff9d; }
 .referral-level-1 > li > .referral-info { border-left-color: #00ccff; }
 .referral-level-2 > li > .referral-info { border-left-color: #ff00ff; }
-.referral-level-3 > li > .referral-info { border-left-color: #ffcc00; } 
+.referral-level-3 > li > .referral-info { border-left-color: #ffcc00; }
+
+.referral-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.referral-content {
+  flex: 1;
+}
+
+.referral-info:hover {
+  border-left-width: 4px;
+  padding-left: calc(1rem - 1px);
+}
+  
