@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Web3 from 'web3';
 import './DonationPopup.css';
 import TransactionConfirmPopup from '../TransactionConfirmPopup/TransactionConfirmPopup';
@@ -26,28 +26,17 @@ const DonationPopup = ({
   const [swapUrl, setSwapUrl] = useState('');
   const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
 
-  useEffect(() => {
-    if (!contract || !contract.methods) {
-      setErrorMessage("Please wait for wallet connection to complete...");
-    } else {
-      setErrorMessage("");
-      checkUsdtBalance();
-      const usdtAddress = process.env.REACT_APP_USDT_CONTRACT_ADDRESS;
-      setSwapUrl(`https://pancakeswap.finance/swap?outputCurrency=${usdtAddress}`);
-    }
-  }, [contract]);
-
-  useEffect(() => {
-    checkUsdtBalance();
+  const calculateTotals = useCallback(() => {
+    const depositFee = (donationAmount * 3) / 100; // 3% fee
+    const totalUsd = donationAmount + depositFee;
+    
+    return {
+      depositFee,
+      totalUsd
+    };
   }, [donationAmount]);
 
-  useEffect(() => {
-    if (referralAddress) {
-      setSponsorAddress(referralAddress);
-    }
-  }, [referralAddress]);
-
-  const checkUsdtBalance = async () => {
+  const checkUsdtBalance = useCallback(async () => {
     try {
       if (!usdtContract || !usdtContract.methods) return;
 
@@ -73,17 +62,28 @@ const DonationPopup = ({
       setShowError(true);
       setErrorMessage(error.message || "Failed to check USDT balance");
     }
-  };
+  }, [usdtContract, calculateTotals]);
 
-  const calculateTotals = () => {
-    const depositFee = (donationAmount * 3) / 100; // 3% fee
-    const totalUsd = donationAmount + depositFee;
-    
-    return {
-      depositFee,
-      totalUsd
-    };
-  };
+  useEffect(() => {
+    if (!contract || !contract.methods) {
+      setErrorMessage("Please wait for wallet connection to complete...");
+    } else {
+      setErrorMessage("");
+      checkUsdtBalance();
+      const usdtAddress = process.env.REACT_APP_USDT_CONTRACT_ADDRESS;
+      setSwapUrl(`https://pancakeswap.finance/swap?outputCurrency=${usdtAddress}`);
+    }
+  }, [contract, checkUsdtBalance]);
+
+  useEffect(() => {
+    checkUsdtBalance();
+  }, [donationAmount, checkUsdtBalance]);
+
+  useEffect(() => {
+    if (referralAddress) {
+      setSponsorAddress(referralAddress);
+    }
+  }, [referralAddress]);
 
   const handleDonate = async () => {
     if (!contract || !contract.methods) {
@@ -154,13 +154,13 @@ const DonationPopup = ({
 
       await refreshDashboard();
       setSuccessPopup({
-        message: "Donation successful! Your donation has been recorded.",
+        message: "Membership successful! Your membership has been initiated.",
         txHash: tx.transactionHash
       });
       setShowConfirm(false); // Only close confirmation after success
       onClose();
     } catch (error) {
-      console.error("Donation failed:", error);
+      console.error("Membership failed:", error);
       setErrorMessage(error.message || "Transaction failed");
       setShowError(true);
       setShowConfirm(false); // Close confirmation on error
@@ -172,7 +172,7 @@ const DonationPopup = ({
   return (
     <div className="popup-container">
       <div className="popup">
-        <h2>Donate to {plan.name}</h2>
+        <h2>{plan.name}</h2>
 
         <div className="balance-display">
           <p><strong>Your USDT Balance:</strong> ${usdtBalance.toFixed(2)}</p>
@@ -205,7 +205,7 @@ const DonationPopup = ({
             </div>
 
             <div className="popup-field">
-              <label>Select Donation Amount:</label>
+              <label>Select Membership Amount:</label>
               <div className="radio-buttons">
                 <label>
                   <input
@@ -244,7 +244,7 @@ const DonationPopup = ({
           <div className="popup-details">
             <h3>Transaction Summary</h3>
             <div className="summary-grid">
-              <p>Donation Amount: <span>${donationAmount}</span></p>
+              <p>Membership Amount: <span>${donationAmount}</span></p>
               <p>Deposit Fee (3%): <span>${calculateTotals().depositFee.toFixed(2)}</span></p>
               <p>Total USD: <span>${calculateTotals().totalUsd.toFixed(2)}</span></p>
             </div>
@@ -254,7 +254,7 @@ const DonationPopup = ({
         {errorMessage && <p className="error-message">{errorMessage}</p>}
 
         <div className="terms-footer">
-          <p>By proceeding with this donation, you agree to become a member of TWPN. Please review the following documents:</p>
+          <p>By proceeding with this package, you agree to become a member of TWPN. Please review the following documents:</p>
           <div className="document-links">
             <a href="/assets/TWPN Membership Application.docx.pdf" target="_blank" rel="noopener noreferrer">Membership Application</a>
             <a href="/assets/TWPN Charter Bylaws.docx.pdf" target="_blank" rel="noopener noreferrer">Charter & Bylaws</a>
@@ -279,7 +279,7 @@ const DonationPopup = ({
             disabled={isLoading || !hasEnoughBalance}
             className={`${isLoading ? 'loading' : ''} ${!hasEnoughBalance ? 'insufficient-balance' : ''}`}
           >
-            {isLoading ? 'Processing...' : hasEnoughBalance ? 'Donate' : 'Insufficient Balance'}
+            {isLoading ? 'Processing...' : hasEnoughBalance ? 'Purchase Membership' : 'Insufficient Balance'}
           </button>
           <button onClick={onClose} disabled={isLoading}>Cancel</button>
         </div>

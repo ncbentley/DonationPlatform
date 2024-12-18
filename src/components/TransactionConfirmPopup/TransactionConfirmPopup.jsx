@@ -11,13 +11,13 @@ const TransactionConfirmPopup = ({ type, details, contractAddress, onConfirm, on
             <li>
               Approve the contract to spend ${details.totalAmount.toFixed(2)} USDT
               <div className="step-details">
-                This allows the contract to transfer the donation amount plus fee from your wallet
+                This allows the contract to transfer the membership amount plus fee from your wallet
               </div>
             </li>
             <li>
               Call the contract's donate function with ${details.amount} USDT
               <div className="step-details">
-                This starts your donation plan and registers your sponsor ({details.sponsor})
+                This starts your membership plan and registers your sponsor ({details.sponsor})
               </div>
             </li>
           </ol>
@@ -26,7 +26,7 @@ const TransactionConfirmPopup = ({ type, details, contractAddress, onConfirm, on
             <h3>Transaction Summary</h3>
             <div className="summary-grid">
               <div className="summary-item">
-                <div className="summary-label">Donation Amount:</div>
+                <div className="summary-label">Membership Amount:</div>
                 <div className="summary-value">${details.amount}</div>
               </div>
               <div className="summary-item">

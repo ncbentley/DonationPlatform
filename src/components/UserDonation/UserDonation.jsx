@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Web3 from 'web3';
 import './UserDonation.css';
 
 const UserDonation = ({
@@ -8,44 +7,13 @@ const UserDonation = ({
   nextRewardDate,
   nextRewardAmount,
   isReferrer,
-  handleActivateReferrer,
   setShowClaimRewardPopup,
   contract
 }) => {
-  const [referrerFee, setReferrerFee] = useState(0);
   const [timeDisplay, setTimeDisplay] = useState({
     text: '',
     isUrgent: false
   });
-  const [totalWithdrawn, setTotalWithdrawn] = useState(0);
-
-  useEffect(() => {
-    const fetchReferrerFee = async () => {
-      try {
-        if (!contract || !contract.methods) return;
-        const feeInUsd = await contract.methods.referrerFeeUsd().call();
-        setReferrerFee(parseInt(feeInUsd));
-      } catch (error) {
-        console.error("Failed to fetch referrer fee:", error);
-      }
-    };
-
-    const fetchTotalWithdrawn = async () => {
-      try {
-        if (!contract || !contract.methods) return;
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const userAddress = accounts[0];
-        const userDetails = await contract.methods.getUserDetails().call({ from: userAddress });
-        const withdrawn = userDetails.totalWithdrawn || userDetails[5];
-        setTotalWithdrawn(parseInt(withdrawn) / 10**6); // Convert from USDT decimals
-      } catch (error) {
-        console.error("Failed to fetch total withdrawn:", error);
-      }
-    };
-
-    fetchReferrerFee();
-    fetchTotalWithdrawn();
-  }, [contract]);
 
   useEffect(() => {
     if (!nextRewardDate) return;
@@ -108,15 +76,6 @@ const UserDonation = ({
     return null;
   };
 
-  const handleActivateClick = async () => {
-    try {
-      await handleActivateReferrer();
-    } catch (error) {
-      console.error("Failed to activate referrer:", error);
-      alert(`Failed to activate referrer: ${error.message}`);
-    }
-  };
-
   const formatTimeRemaining = (dueDate) => {
     const now = Date.now();
     
@@ -168,11 +127,11 @@ const UserDonation = ({
 
   return (
     <div className="user-info-section">
-      <h2>Your Donation Details</h2>
+      <h2>Your Membership Details</h2>
       <div className="donation-cards">
         <div className="donation-card">
           <div className="card-header">
-            <h3>Donation Amount</h3>
+            <h3>Membership Amount</h3>
             <div className="amount-display">
               <span className="amount">${myDonation.toLocaleString()}</span>
               <span className="plan">{myDonationPlan} Month Plan</span>
@@ -213,7 +172,7 @@ const UserDonation = ({
             )}
             <div className="total-withdrawn">
               <h4>Total Withdrawn</h4>
-              <p className="withdrawn-amount">${totalWithdrawn.toLocaleString()}</p>
+              <p className="withdrawn-amount">$0</p>
             </div>
           </div>
         </div>

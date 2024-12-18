@@ -2,12 +2,10 @@ import React from 'react';
 import { Buffer } from 'buffer';
 import { init, useConnectWallet } from '@web3-onboard/react';
 import injectedModule from '@web3-onboard/injected-wallets';
-import walletConnectModule from '@web3-onboard/walletconnect';
 import coinbaseModule from '@web3-onboard/coinbase';
 import torusModule from '@web3-onboard/torus';
 import trustModule from '@web3-onboard/trust';
 import walletLinkModule from '@web3-onboard/walletlink';
-import safeModule from '@web3-onboard/gnosis';
 import './ConnectWallet.css';
 
 // Add Buffer to window object
@@ -15,11 +13,6 @@ window.Buffer = window.Buffer || Buffer;
 
 // Initialize wallet modules
 const injected = injectedModule();
-const walletConnect = walletConnectModule({
-  projectId: process.env.REACT_APP_WALLET_CONNECT_PROJECT_ID || '71ee4f6d17ff108566d692478bb9ff47',
-  version: 2,
-  requiredChains: [56]
-});
 const coinbase = coinbaseModule();
 const torus = torusModule();
 const trust = trustModule();
@@ -97,7 +90,7 @@ const web3Onboard = init({
 });
 
 const ConnectWallet = ({ onConnected }) => {
-  const [{ wallet, connecting }, connect, disconnect] = useConnectWallet();
+  const [{ wallet, connecting }, connect] = useConnectWallet();
 
   React.useEffect(() => {
     if (wallet?.provider) {
@@ -119,12 +112,21 @@ const ConnectWallet = ({ onConnected }) => {
         }
       };
 
-      // Listen for account changes using the provider's events
+      // Add disconnect handler
+      const handleDisconnect = () => {
+        onConnected(null);
+        // Optionally force a page reload to clear all states
+        window.location.reload();
+      };
+
+      // Listen for account changes and disconnect events using the provider's events
       if (wallet.provider.on) {
         wallet.provider.on('accountsChanged', handleAccountsChanged);
+        wallet.provider.on('disconnect', handleDisconnect);
 
         return () => {
           wallet.provider.removeListener('accountsChanged', handleAccountsChanged);
+          wallet.provider.removeListener('disconnect', handleDisconnect);
         };
       }
     }

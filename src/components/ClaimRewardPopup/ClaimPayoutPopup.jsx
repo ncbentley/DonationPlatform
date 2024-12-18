@@ -90,7 +90,7 @@ const ClaimPayoutPopup = ({ payoutAmount, onClose, onClaim }) => {
 
             {charityPercentage > 0 && (
               <p className="charity-amount">
-                Charity Donation: ${((payoutAmount * charityPercentage) / 100).toLocaleString()}
+                Charity Contribution: ${((payoutAmount * charityPercentage) / 100).toLocaleString()}
               </p>
             )}
 

@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Web3 from 'web3';
-import { ethers } from 'ethers';
 import { useConnectWallet } from '@web3-onboard/react';
 import DonationPlatform from './assets/abi/InvestmentPlatform.json';
 import ConnectWallet from './components/ConnectWallet/ConnectWallet';
-import DonationPlans from './components/DonationPlans/DonationPlans';
-import UserDonation from './components/UserDonation/UserDonation';
 import DonationPopup from './components/DonationPopup/DonationPopup';
 import ClaimRewardPopup from './components/ClaimRewardPopup/ClaimRewardPopup';
 import Dashboard from './components/Dashboard/Dashboard';
@@ -116,7 +113,7 @@ function App() {
     }
   }, [wallet]);
 
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     if (contract && account) {
       try {
         const userDetails = await contract.methods.getUserDetails().call({ from: account });
@@ -154,11 +151,11 @@ function App() {
         setError('Error loading user data. Please try again.');
       }
     }
-  };
+  }, [contract, account]);
 
   useEffect(() => {
     loadUserData();
-  }, [contract, account]);
+  }, [loadUserData]);
 
   const handleConnectWallet = (address) => {
     setAccount(address);

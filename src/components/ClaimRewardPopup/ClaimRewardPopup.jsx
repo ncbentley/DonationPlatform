@@ -27,6 +27,10 @@ const ClaimRewardPopup = ({ show, onClose, contract, account, web3, rewardAmount
         .claimPayout()
         .send({ from: account });
 
+      if (!tx.status) {
+        throw new Error('Transaction failed');
+      }
+
       setShowConfirm(false);
       onClose();
     } catch (error) {
