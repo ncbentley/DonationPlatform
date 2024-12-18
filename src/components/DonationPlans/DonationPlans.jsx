@@ -61,9 +61,9 @@ const DonationPlans = ({ onSelectPlan }) => {
               <div className="returns-section">
                 <h4>Rewards Schedule</h4>
                 <ul>
-                  {plan.returns.map((return_, index) => (
-                    <li key={index}>{return_}</li>
-                  ))}
+                  <li>{plan.returns[0]}</li>
+                  <li className="then-separator">Then</li>
+                  <li>{plan.returns[1]}</li>
                 </ul>
               </div>
               <div className="highlights-section">

@@ -24,6 +24,7 @@ const DonationPopup = ({
   const [hasEnoughBalance, setHasEnoughBalance] = useState(false);
   const [showError, setShowError] = useState(false);
   const [swapUrl, setSwapUrl] = useState('');
+  const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
 
   useEffect(() => {
     if (!contract || !contract.methods) {
@@ -87,6 +88,12 @@ const DonationPopup = ({
   const handleDonate = async () => {
     if (!contract || !contract.methods) {
       setErrorMessage("Please wait for wallet connection to complete and try again.");
+      setShowError(true);
+      return;
+    }
+
+    if (!hasAgreedToTerms) {
+      setErrorMessage("Please review and agree to the membership application terms before proceeding.");
       setShowError(true);
       return;
     }
@@ -184,67 +191,87 @@ const DonationPopup = ({
           )}
         </div>
 
-        <div className="popup-details">
-          <p><strong>Returns:</strong> {plan.returns}</p>
-        </div>
+        <div className="popup-content-wrapper">
+          <div className="input-section">
+            <div className="popup-field">
+              <label>Sponsor Wallet Address:</label>
+              <input
+                type="text"
+                className="sponsor-input"
+                value={sponsorAddress}
+                onChange={(e) => setSponsorAddress(e.target.value)}
+                placeholder="Enter sponsor wallet address"
+              />
+            </div>
 
-        <div className="popup-field">
-          <label>Sponsor Wallet Address:</label>
-          <input
-            type="text"
-            className="sponsor-input"
-            value={sponsorAddress}
-            onChange={(e) => setSponsorAddress(e.target.value)}
-            placeholder="Enter sponsor wallet address"
-          />
-        </div>
-
-        <div className="popup-field">
-          <label>Select Donation Amount:</label>
-          <div className="radio-buttons">
-            <label>
-              <input
-                type="radio"
-                name="donationAmount"
-                value={100}
-                checked={donationAmount === 100}
-                onChange={() => setDonationAmount(100)}
-              />
-              $100
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="donationAmount"
-                value={500}
-                checked={donationAmount === 500}
-                onChange={() => setDonationAmount(500)}
-              />
-              $500
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="donationAmount"
-                value={1000}
-                checked={donationAmount === 1000}
-                onChange={() => setDonationAmount(1000)}
-              />
-              $1000
-            </label>
+            <div className="popup-field">
+              <label>Select Donation Amount:</label>
+              <div className="radio-buttons">
+                <label>
+                  <input
+                    type="radio"
+                    name="donationAmount"
+                    value={100}
+                    checked={donationAmount === 100}
+                    onChange={() => setDonationAmount(100)}
+                  />
+                  $100
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="donationAmount"
+                    value={500}
+                    checked={donationAmount === 500}
+                    onChange={() => setDonationAmount(500)}
+                  />
+                  $500
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="donationAmount"
+                    value={1000}
+                    checked={donationAmount === 1000}
+                    onChange={() => setDonationAmount(1000)}
+                  />
+                  $1000
+                </label>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="popup-details">
-          <h3>Transaction Summary</h3>
-          <div className="summary-grid">
-            <p>Donation Amount: <span>${donationAmount}</span></p>
-            <p>Deposit Fee (3%): <span>${calculateTotals().depositFee.toFixed(2)}</span></p>
-            <p>Total USD: <span>${calculateTotals().totalUsd.toFixed(2)}</span></p>
+          <div className="popup-details">
+            <h3>Transaction Summary</h3>
+            <div className="summary-grid">
+              <p>Donation Amount: <span>${donationAmount}</span></p>
+              <p>Deposit Fee (3%): <span>${calculateTotals().depositFee.toFixed(2)}</span></p>
+              <p>Total USD: <span>${calculateTotals().totalUsd.toFixed(2)}</span></p>
+            </div>
           </div>
         </div>
 
         {errorMessage && <p className="error-message">{errorMessage}</p>}
+
+        <div className="terms-footer">
+          <p>By proceeding with this donation, you agree to become a member of TWPN. Please review the following documents:</p>
+          <div className="document-links">
+            <a href="/assets/TWPN Membership Application.docx.pdf" target="_blank" rel="noopener noreferrer">Membership Application</a>
+            <a href="/assets/TWPN Charter Bylaws.docx.pdf" target="_blank" rel="noopener noreferrer">Charter & Bylaws</a>
+            <a href="/assets/TWPN Articles of Association.docx.pdf" target="_blank" rel="noopener noreferrer">Articles of Association</a>
+          </div>
+          <div className="agreement-checkbox">
+            <input
+              type="checkbox"
+              id="termsAgreement"
+              checked={hasAgreedToTerms}
+              onChange={(e) => setHasAgreedToTerms(e.target.checked)}
+            />
+            <label htmlFor="termsAgreement">
+              I have reviewed and agree to the terms in the membership application
+            </label>
+          </div>
+        </div>
 
         <div className="popup-actions">
           <button 
