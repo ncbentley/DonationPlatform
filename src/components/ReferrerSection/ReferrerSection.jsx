@@ -30,7 +30,10 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             const userAddress = accounts[0];
             
-            const { earned, paid } = await contract.methods.getCommissionDetails(userAddress).call();
+            const commission = await contract.methods.getCommissionDetails().call();
+            const earned = commission.commissionEarned;
+            const paid = commission.commissionPaid;
+
             const claimable = earned - paid;
             setCommissionsEarned(parseInt(earned) / 10**18);
             setCommissionsPaid(parseInt(paid) / 10**18);
