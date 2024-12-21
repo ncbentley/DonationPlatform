@@ -122,7 +122,8 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
             sponsor: userData.sponsor,
             donation: parseInt(userDetails[0]) / 10**18,
             isReferrer: referrerData.isActive,
-            rewardsReceived: parseInt(userDetails.totalWithdrawn) / 10**18
+            rewardsReceived: parseInt(userDetails.totalWithdrawn) / 10**18,
+            commissionsEarned: parseInt(referrerData.commissionEarned) / 10**18
           });
           
           if (count % 10 === 0) {
@@ -157,12 +158,12 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
         .filter(donor => donor.sponsor.toLowerCase() === address.toLowerCase())
         .map(async (donor) => {
           const childReferrals = await fetchReferralTree(donor.address, level + 1, maxLevel, donors);
-          
           return {
             address: donor.address,
             donation: donor.donation,
             isReferrer: donor.isReferrer,
             rewardsReceived: donor.rewardsReceived,
+            commissionsEarned: donor.commissionsEarned,
             children: childReferrals || []
           };
         });
@@ -247,7 +248,8 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
                   </div>
                   <div className="stats">
                     <span>Donation: ${node.donation.toFixed(2)}</span>
-                    <span>Earned: ${node.rewardsReceived.toFixed(2)}</span>
+                    <span>Rewards: ${node.rewardsReceived.toFixed(2)}</span>
+                    <span>Commissions: ${node.commissionsEarned.toFixed(2)}</span>
                     {node.isReferrer && <span className="referrer-badge">Active Referral Link</span>}
                   </div>
                 </div>
