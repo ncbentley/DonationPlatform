@@ -250,7 +250,9 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
                     <span>Donation: ${node.donation.toFixed(2)}</span>
                     <span>Rewards: ${node.rewardsReceived.toFixed(2)}</span>
                     <span>Commissions: ${node.commissionsEarned.toFixed(2)}</span>
-                    {node.isReferrer && <span className="referrer-badge">Active Referral Link</span>}
+                    <span className={`referrer-badge ${node.isReferrer ? 'active' : 'inactive'}`}>
+                      {node.isReferrer ? 'Active Referral Link' : 'No Referral Link'}
+                    </span>
                   </div>
                 </div>
               </div>
