@@ -51,10 +51,11 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract }) => {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       await contract.methods.claimCommission().send({ from: accounts[0] });
       // Refresh the data after claiming
-      const claimable = await contract.methods.claimableCommission(accounts[0]).call();
-      const paid = await contract.methods.totalCommissionPaid(accounts[0]).call();
-      setClaimableCommission(parseInt(claimable) / 10**18);
+      const { earned, paid } = await contract.methods.getCommissionDetails().call({ from: userAddress });
+      const claimable = earned - paid;
+      setCommissionsEarned(parseInt(earned) / 10**18);
       setCommissionsPaid(parseInt(paid) / 10**18);
+      setClaimableCommission(parseInt(claimable) / 10**18);
     } catch (error) {
       console.error('Failed to claim commission:', error);
       setErrorMessage(error.message || 'Failed to claim commission');
