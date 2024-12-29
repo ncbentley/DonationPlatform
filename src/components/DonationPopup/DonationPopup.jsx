@@ -135,9 +135,10 @@ const DonationPopup = ({
       const accounts = await web3.eth.getAccounts();
       const userAccount = accounts[0];
 
-      // Calculate amounts in USDT decimals (6 decimals)
-      const baseAmount = (donationAmount * 10**18).toFixed(0);  // Remove any decimals
-      const totalAmount = (donationAmount * 1.03 * 10**18).toFixed(0); // Include 3% fee
+      // Calculate amounts in USDT decimals (18 decimals)
+      // Convert to wei values properly to avoid scientific notation
+      const baseAmount = web3.utils.toWei(donationAmount.toString(), 'ether');
+      const totalAmount = web3.utils.toWei((donationAmount * 1.03).toString(), 'ether');
 
       if (!usdtContract || !usdtContract.methods) {
         throw new Error("USDT contract not initialized. Please wait for wallet connection to complete.");
