@@ -263,6 +263,16 @@
 .referral-info .address {
   font-family: monospace;
   color: #00ff9d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 1rem;
+}
+
+.referral-details {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .referral-info .stats {
@@ -270,6 +280,7 @@
   gap: 1rem;
   font-size: 0.9rem;
   color: #ccc;
+  flex-wrap: wrap;
 }
 
 .referrer-badge {
@@ -278,6 +289,7 @@
   font-size: 12px;
   font-weight: 500;
   color: black;
+  white-space: nowrap;
 }
 
 .referrer-badge.active {
@@ -302,12 +314,16 @@
 .referral-header {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: 1rem;
   width: 100%;
 }
 
 .referral-content {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .referral-info:hover {
