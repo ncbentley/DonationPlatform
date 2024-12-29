@@ -2,10 +2,7 @@ import React from 'react';
 import { Buffer } from 'buffer';
 import { init, useConnectWallet } from '@web3-onboard/react';
 import injectedModule from '@web3-onboard/injected-wallets';
-import coinbaseModule from '@web3-onboard/coinbase';
-import torusModule from '@web3-onboard/torus';
-import trustModule from '@web3-onboard/trust';
-import walletLinkModule from '@web3-onboard/walletlink';
+import walletConnectModule from '@web3-onboard/walletconnect';
 import './ConnectWallet.css';
 
 // Add Buffer to window object
@@ -13,18 +10,17 @@ window.Buffer = window.Buffer || Buffer;
 
 // Initialize wallet modules
 const injected = injectedModule();
-const coinbase = coinbaseModule();
-const torus = torusModule();
-const trust = trustModule();
-const walletLink = walletLinkModule();
+const walletConectOptions = {
+  projectId: '71ee4f6d17ff108566d692478bb9ff47',
+  requiredChains: [56],
+  dappUrl: 'https://truewealthprosperitynetwork.trading'
+}
+const walletConnect = walletConnectModule(walletConectOptions);
 
 const web3Onboard = init({
   wallets: [
     injected,
-    coinbase,
-    torus,
-    trust,
-    walletLink
+    walletConnect,
   ],
   chains: [
     {

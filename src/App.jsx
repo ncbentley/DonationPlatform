@@ -29,6 +29,10 @@ function App() {
 
   const contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
 
+  // Add a ref to track if we've loaded the data
+  const dataLoadedRef = React.useRef(false);
+  const previousAccountRef = React.useRef(null);
+
   useEffect(() => {
     const initWeb3 = async () => {
       if (wallet?.provider) {
@@ -107,59 +111,72 @@ function App() {
           setWrongNetwork(true);
         } else {
           setWrongNetwork(false);
-          window.location.reload();
         }
       });
     }
   }, [wallet]);
 
   const loadUserData = useCallback(async () => {
-    if (contract && account) {
-      try {
-        const userDetails = await contract.methods.getUserDetails().call({ from: account });
+    if (!contract || !wallet?.provider) return;
+    
+    const currentAccount = wallet.accounts?.[0]?.address;
+    if (!currentAccount || currentAccount === previousAccountRef.current) return;
+    
+    previousAccountRef.current = currentAccount;
+
+    try {
+      console.log('Loading user data for account:', currentAccount);
+      const userDetails = await contract.methods.getUserDetails().call({ from: currentAccount });
+      
+      if (userDetails) {
+        const donationAmount = parseInt(userDetails[0]) / 10**18;
+        const donationPlan = parseInt(userDetails[1]);
         
-        if (userDetails) {
-          const donationAmount = parseInt(userDetails[0]) / 10**18;
-          const donationPlan = parseInt(userDetails[1]);
-          
-          setMyDonation(donationAmount);
-          setMyDonationPlan(donationPlan);
-          setIsReferrer(userDetails[6]);
+        setMyDonation(donationAmount);
+        setMyDonationPlan(donationPlan);
+        setIsReferrer(userDetails[6]);
 
-          const nextReward = await contract.methods.getNextPayout(account).call();
-          
-          if (nextReward) {
-            const timestamp = parseInt(nextReward[1]);
-            const amount = parseInt(nextReward[0]) / 10**18;
+        const nextReward = await contract.methods.getNextPayout(currentAccount).call();
+        
+        if (nextReward) {
+          const timestamp = parseInt(nextReward[1]);
+          const amount = parseInt(nextReward[0]) / 10**18;
 
-            if (timestamp > 0) {
-              setNextRewardDate(timestamp * 1000);
-              setNextRewardAmount(amount);
-            } else {
-              setNextRewardDate(null);
-              setNextRewardAmount(0);
-            }
+          if (timestamp > 0) {
+            setNextRewardDate(timestamp * 1000);
+            setNextRewardAmount(amount);
+          } else {
+            setNextRewardDate(null);
+            setNextRewardAmount(0);
           }
-
-          const totalInvestedAmount = await contract.methods.totalDonated().call();
-          const totalPaidOutAmount = await contract.methods.totalPaid().call();
-          setTotalDonated(parseInt(totalInvestedAmount) / 10**18);
-          setTotalPaidOut(parseInt(totalPaidOutAmount) / 10**18);
         }
-      } catch (error) {
-        console.error('Error loading user data:', error);
-        setError('Error loading user data. Please try again.');
+
+        const totalInvestedAmount = await contract.methods.totalDonated().call();
+        const totalPaidOutAmount = await contract.methods.totalPaid().call();
+        setTotalDonated(parseInt(totalInvestedAmount) / 10**18);
+        setTotalPaidOut(parseInt(totalPaidOutAmount) / 10**18);
       }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      setError('Error loading user data. Please try again.');
     }
-  }, [contract, account]);
+  }, [contract, wallet?.provider, wallet?.accounts?.[0]?.address]);
 
+  // Load data when contract or wallet changes
   useEffect(() => {
-    loadUserData();
-  }, [loadUserData]);
+    if (contract && wallet?.provider) {
+      loadUserData();
+    }
+  }, [loadUserData, contract, wallet?.provider]);
 
-  const handleConnectWallet = (address) => {
-    setAccount(address);
-  };
+  const handleConnectWallet = useCallback((address) => {
+    console.log('Connected to wallet:', address);
+    if (typeof address === 'object') {
+      setAccount(address.address);
+    } else {
+      setAccount(address);
+    }
+  }, []);
 
   const handleSelectPlan = (plan) => {
     setSelectedPlan(plan);
@@ -322,6 +339,7 @@ function App() {
           setShowClaimRewardPopup={setShowClaimRewardPopup}
           setSelectedPlan={handleSelectPlan}
           contract={contract}
+          account={account}
         />
 
         {showDonationPopup && selectedPlan && (

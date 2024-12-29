@@ -15,7 +15,8 @@ const Dashboard = ({
   handleActivateReferrer,
   setShowClaimRewardPopup,
   setSelectedPlan,
-  contract
+  contract,
+  account
 }) => {
   const hasActivePlan = myDonation > 0 && myDonationPlan > 0;
   const actualTotalDonated = 15300 + totalDonated;
@@ -55,6 +56,7 @@ const Dashboard = ({
           isReferrer={isReferrer}
           handleActivateReferrer={handleActivateReferrer}
           contract={contract}
+          account={account}
         />
       )}
     </div>
