@@ -12,7 +12,8 @@ const DonationPopup = ({
   usdtContract,
   contractAddress,
   setSuccessPopup,
-  referralAddress 
+  referralAddress,
+  wallet 
 }) => {
   const [sponsorAddress, setSponsorAddress] = useState(referralAddress || "");
   const [donationAmount, setDonationAmount] = useState(100);
@@ -118,22 +119,21 @@ const DonationPopup = ({
 
   const proceedWithDonation = async () => {
     try {
-      if (!contract || !contract.methods) {
+      if (!contract || !contract.methods || !wallet?.accounts?.[0]?.address) {
         throw new Error("Contract not initialized. Please wait for wallet connection to complete.");
       }
 
       setIsLoading(true);
       setErrorMessage("");
       
-      const web3 = new Web3(window.ethereum);
+      const web3 = new Web3(wallet.provider);
       if (!web3.utils.isAddress(sponsorAddress)) {
         setErrorMessage("Invalid sponsor wallet address.");
         setShowError(true);
         return;
       }
 
-      const accounts = await web3.eth.getAccounts();
-      const userAccount = accounts[0];
+      const userAddress = wallet.accounts[0].address;
 
       // Calculate amounts in USDT decimals (18 decimals)
       // Convert to wei values properly to avoid scientific notation
@@ -146,12 +146,12 @@ const DonationPopup = ({
 
       // Approve USDT transfer with the exact amount needed
       await usdtContract.methods.approve(contractAddress, totalAmount)
-        .send({ from: userAccount });
+        .send({ from: userAddress });
 
       // Make donation with the base amount
       const tx = await contract.methods
         .donate(baseAmount, sponsorAddress, plan.id)
-        .send({ from: userAccount });
+        .send({ from: userAddress });
 
       await refreshDashboard();
       setSuccessPopup({

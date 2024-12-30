@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Web3 from 'web3';
 import { useConnectWallet } from '@web3-onboard/react';
+import { FaFacebook, FaTelegram } from 'react-icons/fa';
 import DonationPlatform from './assets/abi/InvestmentPlatform.json';
 import ConnectWallet from './components/ConnectWallet/ConnectWallet';
 import DonationPopup from './components/DonationPopup/DonationPopup';
@@ -183,7 +184,9 @@ function App() {
     setShowDonationPopup(true);
   };
 
-  const handleActivateReferrer = async () => {
+  const handleActivateReferrer = async (userAddress) => {
+    if (!contract || !contract.methods || !wallet?.accounts?.[0]?.address) return;
+    
     try {
       const referrerFee = await contract.methods.referrerFeeUsd().call();
       const usdtContract = new web3.eth.Contract(
@@ -193,7 +196,7 @@ function App() {
 
       const approvalTx = await usdtContract.methods
         .approve(contract._address, referrerFee)
-        .send({ from: account });
+        .send({ from: wallet.accounts[0].address });
         
       if (!approvalTx.status) {
         throw new Error('USDT approval failed');
@@ -201,7 +204,7 @@ function App() {
 
       const activateTx = await contract.methods
         .activateReferrer()
-        .send({ from: account });
+        .send({ from: wallet.accounts[0].address });
         
       if (!activateTx.status) {
         throw new Error('Activation transaction failed');
@@ -323,6 +326,14 @@ function App() {
       <div className="morphing-background-overlay"></div>
 
       <header className="App-header">
+        <div className="social-links">
+          <a href="https://www.facebook.com/groups/2677069705892903/" target="_blank" rel="noopener noreferrer" title="Join us on Facebook">
+            <FaFacebook />
+          </a>
+          <a href="https://t.me/+7_kf4TxOECgzNjEx" target="_blank" rel="noopener noreferrer" title="Join us on Telegram">
+            <FaTelegram />
+          </a>
+        </div>
         <h1>True Wealth Prosperity Network</h1>
       </header>
 
@@ -339,14 +350,14 @@ function App() {
           setShowClaimRewardPopup={setShowClaimRewardPopup}
           setSelectedPlan={handleSelectPlan}
           contract={contract}
-          account={account}
+          wallet={wallet}
         />
 
         {showDonationPopup && selectedPlan && (
           <DonationPopup
             plan={selectedPlan}
             onClose={() => setShowDonationPopup(false)}
-            refreshDashboard={() => loadUserData()}
+            refreshDashboard={loadUserData}
             contract={contract}
             usdtContract={new web3.eth.Contract(
               [{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"type":"function"}],
@@ -358,6 +369,7 @@ function App() {
               console.log(message);
             }}
             referralAddress={new URLSearchParams(window.location.search).get('ref')}
+            wallet={wallet}
           />
         )}
 

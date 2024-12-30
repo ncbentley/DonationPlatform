@@ -3,7 +3,7 @@ import './ReferrerSection.css';
 import ErrorPopup from '../ErrorPopup/ErrorPopup';
 import TransactionConfirmPopup from '../TransactionConfirmPopup/TransactionConfirmPopup';
 
-const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, account }) => {
+const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet }) => {
   const [copySuccess, setCopySuccess] = useState(false);
   const [referrerFee, setReferrerFee] = useState(0);
   const [commissionsEarned, setCommissionsEarned] = useState(0);
@@ -23,24 +23,24 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, account
   const hasLoadedDataRef = React.useRef(false);
 
   useEffect(() => {
-    if (account && account !== previousAccountRef.current) {
-      previousAccountRef.current = account;
-      setReferralLink(`${window.location.origin}${window.location.pathname}?ref=${account}`);
+    if (wallet?.accounts?.[0]?.address && wallet.accounts[0].address !== previousAccountRef.current) {
+      previousAccountRef.current = wallet.accounts[0].address;
+      setReferralLink(`${window.location.origin}${window.location.pathname}?ref=${wallet.accounts[0].address}`);
     }
-  }, [account]);
+  }, [wallet]);
 
   useEffect(() => {
     const fetchReferrerData = async () => {
-      if (!contract?.methods || !account || hasLoadedDataRef.current) return;
+      if (!contract?.methods || !wallet?.accounts?.[0]?.address || hasLoadedDataRef.current) return;
       
       try {
-        console.log('Fetching referrer data for account:', account);
+        console.log('Fetching referrer data for account:', wallet.accounts[0].address);
         const fee = await contract.methods.referrerFeeUsd().call();
         setReferrerFee(parseInt(fee) / 10**18);
 
         if (isReferrer) {
           console.log('User is a referrer, fetching commission details');
-          const { earned, paid } = await contract.methods.getCommissionDetails().call({ from: account });
+          const { earned, paid } = await contract.methods.getCommissionDetails().call({ from: wallet.accounts[0].address });
           const claimable = earned - paid;
           setCommissionsEarned(parseInt(earned) / 10**18);
           setCommissionsPaid(parseInt(paid) / 10**18);
@@ -54,8 +54,8 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, account
             console.log('Donor cache initialized:', cache?.length || 0, 'donors found');
             setDonorCache(cache);
             if (cache) {
-              console.log('Building referral tree for account:', account);
-              const tree = await fetchReferralTree(account, 0, 4, cache);
+              console.log('Building referral tree for account:', wallet.accounts[0].address);
+              const tree = await fetchReferralTree(wallet.accounts[0].address, 0, 4, cache);
               console.log('Referral tree built:', tree);
               setReferralTree(tree);
             } else {
@@ -73,7 +73,7 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, account
       }
     };
     fetchReferrerData();
-  }, [contract?.methods, account, isReferrer]);
+  }, [contract?.methods, wallet, isReferrer]);
 
   const initializeDonorCache = async () => {
     try {
@@ -191,7 +191,7 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, account
                   <div className="address">{node.address}</div>
                   <div className="referral-details">
                     <div className="stats">
-                      <span>Donation: ${node.donation.toLocaleString()}</span>
+                      <span>Membership Amount: ${node.donation.toLocaleString()}</span>
                       <span>Rewards: ${node.rewardsReceived.toLocaleString()}</span>
                       {node.isReferrer && (
                         <span>Commissions: ${node.commissionsEarned.toLocaleString()}</span>
@@ -214,12 +214,12 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, account
   };
 
   const handleClaimCommission = async () => {
-    if (!contract || !contract.methods || !account) return;
+    if (!contract || !contract.methods || !wallet?.accounts?.[0]?.address) return;
     
     try {
-      await contract.methods.claimCommission().send({ from: account });
+      await contract.methods.claimCommission().send({ from: wallet.accounts[0].address });
       // Refresh the data after claiming
-      const { earned, paid } = await contract.methods.getCommissionDetails().call({ from: account });
+      const { earned, paid } = await contract.methods.getCommissionDetails().call({ from: wallet.accounts[0].address });
       const claimable = earned - paid;
       setCommissionsEarned(parseInt(earned) / 10**18);
       setCommissionsPaid(parseInt(paid) / 10**18);
@@ -232,12 +232,15 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, account
   };
 
   const handleActivateReferrerWithError = async () => {
+    if (!contract || !contract.methods || !wallet?.accounts?.[0]?.address) return;
+    
     try {
       setPendingTransaction({
         type: 'activateReferrer',
         details: {
           amount: referrerFee,
-          totalAmount: referrerFee
+          totalAmount: referrerFee,
+          from: wallet.accounts[0].address
         }
       });
       setShowConfirm(true);
@@ -249,8 +252,10 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, account
   };
 
   const proceedWithActivation = async () => {
+    if (!contract || !contract.methods || !wallet?.accounts?.[0]?.address) return;
+    
     try {
-      await handleActivateReferrer();
+      await handleActivateReferrer(wallet.accounts[0].address);
       setShowConfirm(false);
     } catch (error) {
       console.error('Failed to activate referrer:', error);

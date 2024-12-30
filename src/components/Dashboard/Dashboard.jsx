@@ -16,17 +16,17 @@ const Dashboard = ({
   setShowClaimRewardPopup,
   setSelectedPlan,
   contract,
-  account
+  wallet
 }) => {
   const hasActivePlan = myDonation > 0 && myDonationPlan > 0;
-  const actualTotalDonated = 15300 + totalDonated;
+  const actualTotalDonated = totalDonated;
 
   return (
     <div className="dashboard">
       <div className="summary-section">
         <div className="summary-card">
           <h3>Total Membership Fees</h3>
-          <p>${actualTotalDonated.toLocaleString()}</p>
+          <p>${(15300 + actualTotalDonated).toLocaleString()}</p>
         </div>
         <div className="summary-card">
           <h3>Total Rewards Paid</h3>
@@ -56,7 +56,7 @@ const Dashboard = ({
           isReferrer={isReferrer}
           handleActivateReferrer={handleActivateReferrer}
           contract={contract}
-          account={account}
+          wallet={wallet}
         />
       )}
     </div>
