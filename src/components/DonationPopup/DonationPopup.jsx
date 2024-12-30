@@ -257,9 +257,9 @@ const DonationPopup = ({
         <div className="terms-footer">
           <p>By proceeding with this package, you agree to become a member of TWPN. Please review the following documents:</p>
           <div className="document-links">
-            <a href="/assets/TWPN Membership Application.docx.pdf" target="_blank" rel="noopener noreferrer">Membership Application</a>
-            <a href="/assets/TWPN Charter Bylaws.docx.pdf" target="_blank" rel="noopener noreferrer">Charter & Bylaws</a>
-            <a href="/assets/TWPN Articles of Association.docx.pdf" target="_blank" rel="noopener noreferrer">Articles of Association</a>
+            <a href="https://twpn-documents.s3.us-east-2.amazonaws.com/TWPN+Membership+Application.docx.pdf" target="_blank" rel="noopener noreferrer">Membership Application</a>
+            <a href="https://twpn-documents.s3.us-east-2.amazonaws.com/TWPN+Charter+Bylaws.docx.pdf" target="_blank" rel="noopener noreferrer">Charter & Bylaws</a>
+            <a href="https://twpn-documents.s3.us-east-2.amazonaws.com/TWPN+Articles+of+Association.docx.pdf" target="_blank" rel="noopener noreferrer">Articles of Association</a>
           </div>
           <div className="agreement-checkbox">
             <input
