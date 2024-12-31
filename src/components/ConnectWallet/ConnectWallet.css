@@ -6,24 +6,58 @@
 }
 
 .connect-wallet-button {
+  padding: 12px 24px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  border-radius: 8px;
   background: linear-gradient(to right, #ffd700, #e5c100);
   color: black;
-  padding: 15px 30px;
   border: none;
-  border-radius: 8px;
-  font-size: 1.2rem;
   font-weight: bold;
-  cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 .connect-wallet-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
 }
 
 .connect-wallet-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+/* Web3-Onboard Styles */
+onboard-v2 {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 80px !important;
+  min-height: 40px !important;
+  z-index: 9999 !important;
+  display: block !important;
+}
+
+.w3o-container {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  z-index: 9999 !important;
+}
+
+#w3o-account-center,
+#w3o-account-center-container,
+#w3o-account-center-button,
+div[class*="w3o"] {
+  z-index: 9999 !important;
+  position: relative !important;
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 80px !important;
+  min-height: 40px !important;
 }

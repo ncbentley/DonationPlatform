@@ -34,12 +34,10 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
       if (!contract?.methods || !wallet?.accounts?.[0]?.address || hasLoadedDataRef.current) return;
       
       try {
-        console.log('Fetching referrer data for account:', wallet.accounts[0].address);
         const fee = await contract.methods.referrerFeeUsd().call();
         setReferrerFee(parseInt(fee) / 10**18);
 
         if (isReferrer) {
-          console.log('User is a referrer, fetching commission details');
           const { earned, paid } = await contract.methods.getCommissionDetails().call({ from: wallet.accounts[0].address });
           const claimable = earned - paid;
           setCommissionsEarned(parseInt(earned) / 10**18);
@@ -48,23 +46,16 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
 
           // Initialize donor cache and referral tree
           if (!donorCache) {
-            console.log('Initializing donor cache...');
             setLoadingTree(true);
             const cache = await initializeDonorCache();
             console.log('Donor cache initialized:', cache?.length || 0, 'donors found');
             setDonorCache(cache);
             if (cache) {
-              console.log('Building referral tree for account:', wallet.accounts[0].address);
               const tree = await fetchReferralTree(wallet.accounts[0].address, 0, 4, cache);
-              console.log('Referral tree built:', tree);
               setReferralTree(tree);
-            } else {
-              console.log('No donor cache available to build tree');
             }
             setLoadingTree(false);
           }
-        } else {
-          console.log('User is not a referrer');
         }
         hasLoadedDataRef.current = true;
       } catch (error) {
@@ -80,11 +71,9 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
       let donors = [];
       let count = 0;
       
-      console.log('Starting donor cache initialization...');
       while (true) {
         try {
           const donorAddress = await contract.methods.donors(count).call();
-          console.log(`Processing donor ${count}:`, donorAddress);
           const userData = await contract.methods.users(donorAddress).call();
           const referrerData = await contract.methods.referrers(donorAddress).call();
           const userDetails = await contract.methods.getUserDetails().call({ from: donorAddress });
@@ -95,22 +84,20 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
             donation: parseInt(userDetails[0]) / 10**18,
             isReferrer: referrerData.isActive,
             rewardsReceived: parseInt(userDetails.totalWithdrawn) / 10**18,
-            commissionsEarned: parseInt(referrerData.commissionEarned) / 10**18
+            commissionsEarned: parseInt(referrerData.commissionEarned) / 10**18,
+            startTime: parseInt(userDetails[2]) * 1000 // Convert to milliseconds
           });
           
           if (count % 10 === 0) {
-            console.log(`Processed ${count} donors so far`);
             setLoadingProgress(count);
           }
           
           count++;
         } catch (error) {
-          console.log('Reached end of donors list or encountered error:', error);
           break;
         }
       }
       
-      console.log('Donor cache initialization complete. Total donors:', donors.length);
       return donors;
     } catch (error) {
       console.error('Failed to initialize donor cache:', error);
@@ -120,7 +107,6 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
 
   const fetchReferralTree = async (address, level = 0, maxLevel = 4, cache = null) => {
     if (level >= maxLevel) {
-      console.log(`Reached max level ${maxLevel} for address:`, address);
       return null;
     }
     
@@ -128,21 +114,17 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
       const donors = cache || donorCache;
       
       if (!donors) {
-        console.log('No donors cache available for building tree');
         return null;
       }
       
-      console.log(`Finding direct referrals for ${address} at level ${level}`);
       const directReferrals = donors
         .filter(donor => {
           const isDirectReferral = donor.sponsor.toLowerCase() === address.toLowerCase();
           if (isDirectReferral) {
-            console.log(`Found direct referral:`, donor.address);
           }
           return isDirectReferral;
         })
         .map(async (donor) => {
-          console.log(`Processing referral ${donor.address} at level ${level}`);
           const childReferrals = await fetchReferralTree(donor.address, level + 1, maxLevel, donors);
           return {
             address: donor.address,
@@ -150,17 +132,26 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
             isReferrer: donor.isReferrer,
             rewardsReceived: donor.rewardsReceived,
             commissionsEarned: donor.commissionsEarned,
+            startTime: donor.startTime,
             children: childReferrals || []
           };
         });
 
       const resolvedReferrals = await Promise.all(directReferrals);
-      console.log(`Resolved ${resolvedReferrals.length} referrals at level ${level} for ${address}`);
       return resolvedReferrals;
     } catch (error) {
       console.error('Failed to fetch referral tree:', error);
       return null;
     }
+  };
+
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric'
+    });
   };
 
   const toggleNode = (address, event) => {
@@ -191,6 +182,7 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
                   <div className="address">{node.address}</div>
                   <div className="referral-details">
                     <div className="stats">
+                      <span>Joined: {formatDate(node.startTime)}</span>
                       <span>Membership Amount: ${node.donation.toLocaleString()}</span>
                       <span>Rewards: ${node.rewardsReceived.toLocaleString()}</span>
                       {node.isReferrer && (

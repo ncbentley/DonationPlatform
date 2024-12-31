@@ -34,7 +34,7 @@ const web3Onboard = init({
   appMetadata: {
     name: 'True Wealth Prosperity Network',
     description: 'True Wealth Prosperity Network DApp',
-    explore: `https://bscscan.com/address/0xa9B93C2d44472bb47fF7126Bca0c0051Ae5100D3`
+    explore: `https://bscscan.com/address/0x1AEaCf7E451345cC50717af02e7Be3FaC87Bf4f4`
   },
   theme: {
     '--w3o-background-color': '#1a1a1a',
@@ -43,16 +43,6 @@ const web3Onboard = init({
     '--w3o-border-color': '#3a3a3a',
     '--w3o-action-color': '#6b21a8',
     '--w3o-border-radius': '8px'
-  },
-  accountCenter: {
-    desktop: {
-      enabled: true,
-      position: 'topRight'
-    },
-    mobile: {
-      enabled: true,
-      position: 'topRight'
-    }
   },
   connect: {
     autoConnectLastWallet: true,
@@ -82,7 +72,21 @@ const web3Onboard = init({
         };
       }
     }
-  }
+  },
+  accountCenter: {
+    desktop: {
+      position: 'topRight',
+      enabled: true,
+      minimal: true,
+      containerElement: 'body'
+    },
+    mobile: {
+      position: 'topRight',
+      enabled: true,
+      minimal: true,
+      containerElement: 'body'
+    }
+  },
 });
 
 const ConnectWallet = ({ onConnected }) => {
