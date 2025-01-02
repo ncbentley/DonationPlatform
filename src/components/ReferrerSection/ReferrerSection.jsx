@@ -3,7 +3,15 @@ import './ReferrerSection.css';
 import ErrorPopup from '../ErrorPopup/ErrorPopup';
 import TransactionConfirmPopup from '../TransactionConfirmPopup/TransactionConfirmPopup';
 
-const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet }) => {
+const ReferrerSection = ({ 
+  isReferrer, 
+  handleActivateReferrer, 
+  contract, 
+  wallet,
+  donorCache,
+  referralTree: propReferralTree,
+  setReferralTree
+}) => {
   const [copySuccess, setCopySuccess] = useState(false);
   const [referrerFee, setReferrerFee] = useState(0);
   const [commissionsEarned, setCommissionsEarned] = useState(0);
@@ -14,10 +22,8 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingTransaction, setPendingTransaction] = useState(null);
   const [referralLink, setReferralLink] = useState('');
-  const [referralTree, setReferralTree] = useState(null);
+  const [landingPageLink, setLandingPageLink] = useState('');
   const [loadingTree, setLoadingTree] = useState(false);
-  const [donorCache, setDonorCache] = useState(null);
-  const [loadingProgress, setLoadingProgress] = useState(0);
   const [expandedNodes, setExpandedNodes] = useState(new Set());
   const previousAccountRef = React.useRef(null);
   const hasLoadedDataRef = React.useRef(false);
@@ -26,6 +32,7 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
     if (wallet?.accounts?.[0]?.address && wallet.accounts[0].address !== previousAccountRef.current) {
       previousAccountRef.current = wallet.accounts[0].address;
       setReferralLink(`${window.location.origin}${window.location.pathname}?ref=${wallet.accounts[0].address}`);
+      setLandingPageLink(`https://truewealthprosperitynetwork.online?ref=${wallet.accounts[0].address}`);
     }
   }, [wallet]);
 
@@ -44,16 +51,11 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
           setCommissionsPaid(parseInt(paid) / 10**18);
           setClaimableCommission(parseInt(claimable) / 10**18);
 
-          // Initialize donor cache and referral tree
-          if (!donorCache) {
+          // Only fetch the tree if we don't have it yet
+          if (donorCache && !propReferralTree) {
             setLoadingTree(true);
-            const cache = await initializeDonorCache();
-            console.log('Donor cache initialized:', cache?.length || 0, 'donors found');
-            setDonorCache(cache);
-            if (cache) {
-              const tree = await fetchReferralTree(wallet.accounts[0].address, 0, 4, cache);
-              setReferralTree(tree);
-            }
+            const tree = await fetchReferralTree(wallet.accounts[0].address, 0, 4, donorCache);
+            setReferralTree(tree);
             setLoadingTree(false);
           }
         }
@@ -64,46 +66,7 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
       }
     };
     fetchReferrerData();
-  }, [contract?.methods, wallet, isReferrer]);
-
-  const initializeDonorCache = async () => {
-    try {
-      let donors = [];
-      let count = 0;
-      
-      while (true) {
-        try {
-          const donorAddress = await contract.methods.donors(count).call();
-          const userData = await contract.methods.users(donorAddress).call();
-          const referrerData = await contract.methods.referrers(donorAddress).call();
-          const userDetails = await contract.methods.getUserDetails().call({ from: donorAddress });
-
-          donors.push({
-            address: donorAddress,
-            sponsor: userData.sponsor,
-            donation: parseInt(userDetails[0]) / 10**18,
-            isReferrer: referrerData.isActive,
-            rewardsReceived: parseInt(userDetails.totalWithdrawn) / 10**18,
-            commissionsEarned: parseInt(referrerData.commissionEarned) / 10**18,
-            startTime: parseInt(userDetails[2]) * 1000 // Convert to milliseconds
-          });
-          
-          if (count % 10 === 0) {
-            setLoadingProgress(count);
-          }
-          
-          count++;
-        } catch (error) {
-          break;
-        }
-      }
-      
-      return donors;
-    } catch (error) {
-      console.error('Failed to initialize donor cache:', error);
-      return null;
-    }
-  };
+  }, [contract?.methods, wallet, isReferrer, donorCache, propReferralTree]);
 
   const fetchReferralTree = async (address, level = 0, maxLevel = 4, cache = null) => {
     if (level >= maxLevel) {
@@ -118,12 +81,7 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
       }
       
       const directReferrals = donors
-        .filter(donor => {
-          const isDirectReferral = donor.sponsor.toLowerCase() === address.toLowerCase();
-          if (isDirectReferral) {
-          }
-          return isDirectReferral;
-        })
+        .filter(donor => donor.sponsor.toLowerCase() === address.toLowerCase())
         .map(async (donor) => {
           const childReferrals = await fetchReferralTree(donor.address, level + 1, maxLevel, donors);
           return {
@@ -306,19 +264,46 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
     <div className="referrer-info-section">
       <h2>Your Referral Dashboard</h2>
       
-      <div className="referral-link-input-group">
-        <input
-          type="text"
-          readOnly
-          value={referralLink}
-          className="referral-link-input"
-        />
-        <button 
-          onClick={handleCopyReferralLink}
-          className={`copy-button ${copySuccess ? 'success' : ''}`}
-        >
-          {copySuccess ? 'Copied!' : 'Copy'}
-        </button>
+      <div className="referral-link-section">
+        <div className="referral-link-row">
+          <span className="referral-link-label">Dashboard:</span>
+          <div className="referral-link-input-group">
+            <input
+              type="text"
+              readOnly
+              value={referralLink}
+              className="referral-link-input"
+            />
+            <button 
+              onClick={handleCopyReferralLink}
+              className={`copy-button ${copySuccess ? 'success' : ''}`}
+            >
+              {copySuccess ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        </div>
+
+        <div className="referral-link-row">
+          <span className="referral-link-label">Landing Page:</span>
+          <div className="referral-link-input-group">
+            <input
+              type="text"
+              readOnly
+              value={landingPageLink}
+              className="referral-link-input"
+            />
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText(landingPageLink);
+                setCopySuccess(true);
+                setTimeout(() => setCopySuccess(false), 2000);
+              }}
+              className={`copy-button ${copySuccess ? 'success' : ''}`}
+            >
+              {copySuccess ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        </div>
       </div>
       
       <div className="commission-stats">
@@ -345,11 +330,11 @@ const ReferrerSection = ({ isReferrer, handleActivateReferrer, contract, wallet 
         <h3>Your Referral Network</h3>
         {loadingTree ? (
           <div className="loading-tree">
-            Loading referral network... ({loadingProgress} members processed)
+            Loading referral network...
           </div>
-        ) : referralTree ? (
+        ) : propReferralTree ? (
           <div className="referral-tree">
-            {renderReferralTree(referralTree)}
+            {renderReferralTree(propReferralTree)}
           </div>
         ) : (
           <div className="loading-tree">

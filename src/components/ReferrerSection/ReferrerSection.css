@@ -75,12 +75,38 @@
   box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
 }
 
+.referral-link-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.referral-link-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.referral-link-label {
+  color: #ffd700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
 .referral-link-input-group {
   display: flex;
   gap: 0.5rem;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto 1.5rem;
+  flex: 1;
+  margin: 0;
   align-items: center;
 }
 
@@ -182,9 +208,18 @@
 }
 
 @media (max-width: 768px) {
-  .referral-link-input-group {
+  .referral-link-row {
     flex-direction: column;
-    max-width: 100%;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .referral-link-label {
+    min-width: auto;
+  }
+
+  .referral-link-input-group {
+    width: 100%;
   }
 
   .copy-button {
@@ -329,5 +364,32 @@
 .referral-info:hover {
   border-left-width: 4px;
   padding-left: calc(1rem - 1px);
+}
+
+.referral-link-container {
+  background: rgba(25, 25, 25, 0.95);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.referral-link-container h4 {
+  color: #ffd700;
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .referral-link-section {
+    max-width: 100%;
+  }
+
+  .referral-link-container {
+    padding: 1rem;
+  }
 }
   
