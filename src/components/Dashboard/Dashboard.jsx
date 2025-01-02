@@ -24,6 +24,13 @@ const Dashboard = ({
   const hasActivePlan = myDonation > 0 && myDonationPlan > 0;
   const actualTotalDonated = totalDonated;
 
+  // If user loses their active plan, switch back to membership tab
+  useEffect(() => {
+    if (!hasActivePlan && activeTab === 'referral') {
+      setActiveTab('membership');
+    }
+  }, [hasActivePlan, activeTab]);
+
   // Initialize donor cache when contract and wallet are available
   useEffect(() => {
     const initializeDonorCache = async () => {
@@ -125,12 +132,14 @@ const Dashboard = ({
           >
             Membership Details
           </button>
-          <button 
-            className={`tab-button ${activeTab === 'referral' ? 'active' : ''}`}
-            onClick={() => setActiveTab('referral')}
-          >
-            Referral Dashboard
-          </button>
+          {hasActivePlan && (
+            <button 
+              className={`tab-button ${activeTab === 'referral' ? 'active' : ''}`}
+              onClick={() => setActiveTab('referral')}
+            >
+              Referral Dashboard
+            </button>
+          )}
         </div>
       </div>
       

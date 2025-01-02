@@ -4,6 +4,8 @@ import './DonationPopup.css';
 import TransactionConfirmPopup from '../TransactionConfirmPopup/TransactionConfirmPopup';
 import ErrorPopup from '../ErrorPopup/ErrorPopup';
 
+const DEFAULT_SPONSOR = "0x6667146dDF8e768E245e04e29787621b8cB7caa5";
+
 const DonationPopup = ({ 
   plan, 
   onClose, 
@@ -15,7 +17,7 @@ const DonationPopup = ({
   referralAddress,
   wallet 
 }) => {
-  const [sponsorAddress, setSponsorAddress] = useState(referralAddress || "");
+  const [sponsorAddress, setSponsorAddress] = useState(referralAddress || DEFAULT_SPONSOR);
   const [donationAmount, setDonationAmount] = useState(100);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,64 +28,107 @@ const DonationPopup = ({
   const [showError, setShowError] = useState(false);
   const [swapUrl, setSwapUrl] = useState('');
   const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
+  const [showSponsorWarning, setShowSponsorWarning] = useState(false);
 
   const calculateTotals = useCallback(() => {
     const depositFee = (donationAmount * 3) / 100; // 3% fee
     const totalUsd = donationAmount + depositFee;
-    
-    return {
-      depositFee,
-      totalUsd
-    };
+    return { depositFee, totalUsd };
   }, [donationAmount]);
 
   const checkUsdtBalance = useCallback(async () => {
     try {
-      if (!usdtContract || !usdtContract.methods) return;
-
-      const web3 = new Web3(window.ethereum);
-      const accounts = await web3.eth.getAccounts();
-      if (!accounts.length) return;
-
-      const balance = await usdtContract.methods.balanceOf(accounts[0]).call();
-      const balanceInUsd = parseInt(balance) / 10**18; // Convert from USDT decimals
-      setUsdtBalance(balanceInUsd);
-
-      // Check if balance is sufficient for donation + fee
-      const requiredAmount = calculateTotals().totalUsd;
-      setHasEnoughBalance(balanceInUsd >= requiredAmount);
-      
-      if (balanceInUsd < requiredAmount) {
-        setErrorMessage(`Insufficient USDT balance. You have $${balanceInUsd.toFixed(2)} USDT but need $${requiredAmount.toFixed(2)} USDT`);
-      } else {
-        setErrorMessage("");
+      if (!usdtContract?.methods || !wallet?.provider || !wallet?.accounts?.[0]?.address) {
+        return;
       }
+
+      const userAddress = wallet.accounts[0].address;
+      const balance = await usdtContract.methods.balanceOf(userAddress).call();
+      const balanceInUsd = parseInt(balance) / 10**18;
+      
+      // Batch state updates
+      const updates = () => {
+        setUsdtBalance(balanceInUsd);
+        const requiredAmount = calculateTotals().totalUsd;
+        setHasEnoughBalance(balanceInUsd >= requiredAmount);
+        
+        if (balanceInUsd < requiredAmount) {
+          setErrorMessage(`Insufficient USDT balance. You have $${balanceInUsd.toFixed(2)} USDT but need $${requiredAmount.toFixed(2)} USDT`);
+        } else {
+          setErrorMessage("");
+        }
+      };
+      updates();
     } catch (error) {
       console.error("Failed to check USDT balance:", error);
-      setShowError(true);
-      setErrorMessage(error.message || "Failed to check USDT balance");
+      // Batch error state updates
+      const errorUpdates = () => {
+        setShowError(true);
+        setErrorMessage(error.message || "Failed to check USDT balance");
+      };
+      errorUpdates();
     }
-  }, [usdtContract, calculateTotals]);
+  }, [usdtContract?.methods, wallet?.accounts?.[0]?.address, calculateTotals]);
 
+  // Initial setup effect
   useEffect(() => {
-    if (!contract || !contract.methods) {
-      setErrorMessage("Please wait for wallet connection to complete...");
-    } else {
-      setErrorMessage("");
-      checkUsdtBalance();
-      const usdtAddress = process.env.REACT_APP_USDT_CONTRACT_ADDRESS;
-      setSwapUrl(`https://pancakeswap.finance/swap?outputCurrency=${usdtAddress}`);
-    }
-  }, [contract, checkUsdtBalance]);
+    let mounted = true;
+    
+    const initializeContract = () => {
+      if (!mounted) return;
+      
+      if (!contract?.methods || !wallet?.provider) {
+        setErrorMessage("Please wait for wallet connection to complete...");
+      } else {
+        setErrorMessage("");
+        const usdtAddress = process.env.REACT_APP_USDT_CONTRACT_ADDRESS;
+        setSwapUrl(`https://pancakeswap.finance/swap?outputCurrency=${usdtAddress}`);
+      }
+    };
 
-  useEffect(() => {
-    checkUsdtBalance();
-  }, [donationAmount, checkUsdtBalance]);
+    initializeContract();
+    return () => {
+      mounted = false;
+    };
+  }, [contract?.methods, wallet?.provider]);
 
+  // Balance check effect
   useEffect(() => {
-    if (referralAddress) {
+    let mounted = true;
+    let timeoutId = null;
+    
+    const checkBalance = async () => {
+      if (!mounted || !wallet?.provider || !usdtContract?.methods) return;
+      
+      // Add a small delay to prevent rapid re-checks
+      timeoutId = setTimeout(async () => {
+        if (mounted) {
+          await checkUsdtBalance();
+        }
+      }, 100);
+    };
+
+    checkBalance();
+
+    return () => {
+      mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [checkUsdtBalance, wallet?.provider, usdtContract?.methods]);
+
+  // Referral address effect
+  useEffect(() => {
+    let mounted = true;
+    
+    if (mounted && referralAddress) {
       setSponsorAddress(referralAddress);
     }
+
+    return () => {
+      mounted = false;
+    };
   }, [referralAddress]);
 
   const handleDonate = async () => {
@@ -105,6 +150,12 @@ const DonationPopup = ({
       return;
     }
 
+    // Check if using default sponsor
+    if (sponsorAddress.toLowerCase() === DEFAULT_SPONSOR.toLowerCase()) {
+      setShowSponsorWarning(true);
+      return;
+    }
+
     setPendingTransaction({
       type: 'donate',
       details: {
@@ -115,6 +166,26 @@ const DonationPopup = ({
       }
     });
     setShowConfirm(true);
+  };
+
+  const handleConfirmDefaultSponsor = () => {
+    setShowSponsorWarning(false);
+    setPendingTransaction({
+      type: 'donate',
+      details: {
+        amount: donationAmount,
+        sponsor: sponsorAddress,
+        feePercent: 3,
+        totalAmount: calculateTotals().totalUsd
+      }
+    });
+    setShowConfirm(true);
+  };
+
+  const handleRejectDefaultSponsor = () => {
+    setShowSponsorWarning(false);
+    // Focus the sponsor input field
+    document.querySelector('.sponsor-input')?.focus();
   };
 
   const proceedWithDonation = async () => {
@@ -285,6 +356,30 @@ const DonationPopup = ({
           <button onClick={onClose} disabled={isLoading}>Cancel</button>
         </div>
       </div>
+
+      {showSponsorWarning && (
+        <div className="popup-container">
+          <div className="popup warning-popup">
+            <h3>Warning: Default Sponsor</h3>
+            <p>You are about to sign up under the default sponsor wallet. This means you won't be part of anyone's referral network.</p>
+            <p>Do you have a sponsor's wallet address?</p>
+            <div className="popup-actions">
+              <button 
+                onClick={handleConfirmDefaultSponsor} 
+                className="secondary-button warning-button"
+              >
+                Continue with Default Sponsor
+              </button>
+              <button 
+                onClick={handleRejectDefaultSponsor} 
+                className="primary-button"
+              >
+                Enter Sponsor's Wallet
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showConfirm && (
         <TransactionConfirmPopup

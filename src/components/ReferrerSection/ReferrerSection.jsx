@@ -12,7 +12,8 @@ const ReferrerSection = ({
   referralTree: propReferralTree,
   setReferralTree
 }) => {
-  const [copySuccess, setCopySuccess] = useState(false);
+  const [dashboardCopySuccess, setDashboardCopySuccess] = useState(false);
+  const [landingPageCopySuccess, setLandingPageCopySuccess] = useState(false);
   const [referrerFee, setReferrerFee] = useState(0);
   const [commissionsEarned, setCommissionsEarned] = useState(0);
   const [commissionsPaid, setCommissionsPaid] = useState(0);
@@ -215,11 +216,21 @@ const ReferrerSection = ({
     }
   };
 
-  const handleCopyReferralLink = async () => {
+  const handleCopyDashboardLink = async () => {
     try {
       await navigator.clipboard.writeText(referralLink);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
+      setDashboardCopySuccess(true);
+      setTimeout(() => setDashboardCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  const handleCopyLandingPageLink = async () => {
+    try {
+      await navigator.clipboard.writeText(landingPageLink);
+      setLandingPageCopySuccess(true);
+      setTimeout(() => setLandingPageCopySuccess(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
@@ -275,10 +286,10 @@ const ReferrerSection = ({
               className="referral-link-input"
             />
             <button 
-              onClick={handleCopyReferralLink}
-              className={`copy-button ${copySuccess ? 'success' : ''}`}
+              onClick={handleCopyDashboardLink}
+              className={`copy-button ${dashboardCopySuccess ? 'success' : ''}`}
             >
-              {copySuccess ? 'Copied!' : 'Copy'}
+              {dashboardCopySuccess ? 'Copied!' : 'Copy'}
             </button>
           </div>
         </div>
@@ -293,14 +304,10 @@ const ReferrerSection = ({
               className="referral-link-input"
             />
             <button 
-              onClick={() => {
-                navigator.clipboard.writeText(landingPageLink);
-                setCopySuccess(true);
-                setTimeout(() => setCopySuccess(false), 2000);
-              }}
-              className={`copy-button ${copySuccess ? 'success' : ''}`}
+              onClick={handleCopyLandingPageLink}
+              className={`copy-button ${landingPageCopySuccess ? 'success' : ''}`}
             >
-              {copySuccess ? 'Copied!' : 'Copy'}
+              {landingPageCopySuccess ? 'Copied!' : 'Copy'}
             </button>
           </div>
         </div>

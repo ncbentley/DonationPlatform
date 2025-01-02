@@ -9,6 +9,24 @@ import ClaimRewardPopup from './components/ClaimRewardPopup/ClaimRewardPopup';
 import Dashboard from './components/Dashboard/Dashboard';
 import './App.css';
 
+// Define BSC network configuration
+const BSC_CONFIG = {
+  chainId: '0x38', // 56 in hex
+  chainName: 'BSC Network',
+  nativeCurrency: {
+    name: 'BNB',
+    symbol: 'BNB',
+    decimals: 18
+  },
+  rpcUrls: [
+    'https://bsc-mainnet.public.blastapi.io',
+    'https://bsc-dataseed.binance.org',
+    'https://bsc-dataseed1.defibit.io',
+    'https://bsc-dataseed1.ninicoin.io'
+  ],
+  blockExplorerUrls: ['https://bscscan.com']
+};
+
 function App() {
   const [{ wallet }] = useConnectWallet();
   const [web3, setWeb3] = useState(null);
@@ -47,7 +65,7 @@ function App() {
             try {
               await wallet.provider.request({
                 method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }], // BSC Mainnet in hex
+                params: [{ chainId: BSC_CONFIG.chainId }],
               });
             } catch (switchError) {
               // This error code means the chain has not been added to MetaMask
@@ -55,17 +73,7 @@ function App() {
                 try {
                   await wallet.provider.request({
                     method: 'wallet_addEthereumChain',
-                    params: [{
-                      chainId: '0x38',
-                      chainName: 'BSC Network',
-                      nativeCurrency: {
-                        name: 'BNB',
-                        symbol: 'BNB',
-                        decimals: 18
-                      },
-                      rpcUrls: ['https://bsc-dataseed1.binance.org'],
-                      blockExplorerUrls: ['https://bscscan.com']
-                    }]
+                    params: [BSC_CONFIG]
                   });
                 } catch (addError) {
                   console.error('Error adding chain:', addError);
@@ -79,6 +87,24 @@ function App() {
           }
 
           if (contractAddress) {
+            // Create a new Web3 instance with the first working RPC
+            let workingProvider;
+            for (const rpcUrl of BSC_CONFIG.rpcUrls) {
+              try {
+                const provider = new Web3.providers.HttpProvider(rpcUrl);
+                const testWeb3 = new Web3(provider);
+                await testWeb3.eth.getBlockNumber(); // Test the connection
+                workingProvider = provider;
+                break;
+              } catch (error) {
+                console.warn(`RPC ${rpcUrl} failed, trying next one...`);
+              }
+            }
+
+            if (!workingProvider) {
+              throw new Error('No working RPC endpoint found');
+            }
+
             const contractInstance = new web3Instance.eth.Contract(
               DonationPlatform,
               contractAddress
