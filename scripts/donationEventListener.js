@@ -112,8 +112,11 @@ const contractABI = [
 ];
 
 // Initialize DynamoDB
+const AWS_REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'us-east-2';
+console.log('Using AWS Region:', AWS_REGION);
+
 const dynamodb = DynamoDBDocument.from(new DynamoDB({
-  region: 'us-east-2'
+  region: AWS_REGION
 }));
 
 // Initialize Web3 with HTTP provider for querying past events

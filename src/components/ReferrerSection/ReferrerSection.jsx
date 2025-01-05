@@ -7,11 +7,7 @@ import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
 // Initialize DynamoDB
 const dynamodb = DynamoDBDocument.from(new DynamoDB({
-  region: process.env.REACT_APP_AWS_REGION || process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY
-  }
+  region: process.env.REACT_APP_AWS_REGION || 'us-east-2'
 }));
 
 const ReferrerSection = ({ 
@@ -79,12 +75,12 @@ const ReferrerSection = ({
     try {
       // Scan the table to get all users
       const { Items } = await dynamodb.scan({
-        TableName: process.env.REACT_APP_DYNAMODB_TABLE_NAME || process.env.DYNAMODB_TABLE_NAME
+        TableName: process.env.REACT_APP_DYNAMODB_TABLE_NAME || process.env.DYNAMODB_TABLE_NAME,
       });
 
       if (!Items) {
         setReferralTree([]);
-        return;
+        return; 
       }
       
       // Process the data into a tree structure
