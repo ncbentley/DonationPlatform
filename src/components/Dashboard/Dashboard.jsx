@@ -19,8 +19,6 @@ const Dashboard = ({
   wallet
 }) => {
   const [activeTab, setActiveTab] = useState('membership');
-  const [donorCache, setDonorCache] = useState(null);
-  const [referralTree, setReferralTree] = useState(null);
   const hasActivePlan = myDonation > 0 && myDonationPlan > 0;
   const actualTotalDonated = totalDonated;
 
@@ -30,49 +28,6 @@ const Dashboard = ({
       setActiveTab('membership');
     }
   }, [hasActivePlan, activeTab]);
-
-  // Initialize donor cache when contract and wallet are available
-  useEffect(() => {
-    const initializeDonorCache = async () => {
-      if (!contract?.methods || !wallet?.accounts?.[0]?.address || donorCache) return;
-
-      try {
-        let donors = [];
-        let count = 0;
-        
-        while (true) {
-          try {
-            const donorAddress = await contract.methods.donors(count).call();
-            const userData = await contract.methods.users(donorAddress).call();
-            const referrerData = await contract.methods.referrers(donorAddress).call();
-            const userDetails = await contract.methods.getUserDetails().call({ from: donorAddress });
-
-            donors.push({
-              address: donorAddress,
-              sponsor: userData.sponsor,
-              donation: parseInt(userDetails[0]) / 10**18,
-              isReferrer: referrerData.isActive,
-              rewardsReceived: parseInt(userDetails.totalWithdrawn) / 10**18,
-              commissionsEarned: parseInt(referrerData.commissionEarned) / 10**18,
-              startTime: parseInt(userDetails[2]) * 1000
-            });
-            
-            count++;
-          } catch (error) {
-            break;
-          }
-        }
-        
-        setDonorCache(donors);
-      } catch (error) {
-        console.error('Failed to initialize member cache:', error);
-      }
-    };
-
-    if (isReferrer) {
-      initializeDonorCache();
-    }
-  }, [contract?.methods, wallet?.accounts, isReferrer, donorCache]);
 
   const renderContent = () => {
     if (activeTab === 'membership') {
@@ -109,14 +64,11 @@ const Dashboard = ({
       );
     } else {
       return (
-        <ReferrerSection 
+        <ReferrerSection
           isReferrer={isReferrer}
           handleActivateReferrer={handleActivateReferrer}
           contract={contract}
           wallet={wallet}
-          donorCache={donorCache}
-          referralTree={referralTree}
-          setReferralTree={setReferralTree}
         />
       );
     }

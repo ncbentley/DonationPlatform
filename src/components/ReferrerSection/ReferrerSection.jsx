@@ -2,15 +2,23 @@ import React, { useState, useEffect } from 'react';
 import './ReferrerSection.css';
 import ErrorPopup from '../ErrorPopup/ErrorPopup';
 import TransactionConfirmPopup from '../TransactionConfirmPopup/TransactionConfirmPopup';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+
+// Initialize DynamoDB
+const dynamodb = DynamoDBDocument.from(new DynamoDB({
+  region: process.env.REACT_APP_AWS_REGION || process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY
+  }
+}));
 
 const ReferrerSection = ({ 
   isReferrer, 
   handleActivateReferrer, 
   contract, 
-  wallet,
-  donorCache,
-  referralTree: propReferralTree,
-  setReferralTree
+  wallet
 }) => {
   const [dashboardCopySuccess, setDashboardCopySuccess] = useState(false);
   const [landingPageCopySuccess, setLandingPageCopySuccess] = useState(false);
@@ -25,9 +33,9 @@ const ReferrerSection = ({
   const [referralLink, setReferralLink] = useState('');
   const [landingPageLink, setLandingPageLink] = useState('');
   const [loadingTree, setLoadingTree] = useState(false);
+  const [referralTree, setReferralTree] = useState(null);
   const [expandedNodes, setExpandedNodes] = useState(new Set());
   const previousAccountRef = React.useRef(null);
-  const hasLoadedDataRef = React.useRef(false);
 
   useEffect(() => {
     if (wallet?.accounts?.[0]?.address && wallet.accounts[0].address !== previousAccountRef.current) {
@@ -39,7 +47,7 @@ const ReferrerSection = ({
 
   useEffect(() => {
     const fetchReferrerData = async () => {
-      if (!contract?.methods || !wallet?.accounts?.[0]?.address || hasLoadedDataRef.current) return;
+      if (!contract?.methods || !wallet?.accounts?.[0]?.address) return;
       
       try {
         const fee = await contract.methods.referrerFeeUsd().call();
@@ -52,56 +60,72 @@ const ReferrerSection = ({
           setCommissionsPaid(parseInt(paid) / 10**18);
           setClaimableCommission(parseInt(claimable) / 10**18);
 
-          // Only fetch the tree if we don't have it yet
-          if (donorCache && !propReferralTree) {
-            setLoadingTree(true);
-            const tree = await fetchReferralTree(wallet.accounts[0].address, 0, 4, donorCache);
-            setReferralTree(tree);
-            setLoadingTree(false);
-          }
+          // Fetch referral tree from DynamoDB
+          await fetchReferralTreeFromDB(wallet.accounts[0].address);
         }
-        hasLoadedDataRef.current = true;
       } catch (error) {
         console.error('Failed to fetch referrer data:', error);
-        hasLoadedDataRef.current = false;
+        setErrorMessage(error.message || 'Failed to fetch referrer data');
+        setShowError(true);
       }
     };
     fetchReferrerData();
-  }, [contract?.methods, wallet, isReferrer, donorCache, propReferralTree]);
+  }, [contract?.methods, wallet, isReferrer]);
 
-  const fetchReferralTree = async (address, level = 0, maxLevel = 4, cache = null) => {
-    if (level >= maxLevel) {
-      return null;
-    }
+  const fetchReferralTreeFromDB = async (address, level = 0, maxLevel = 4) => {
+    if (level >= maxLevel) return null;
     
+    setLoadingTree(true);
     try {
-      const donors = cache || donorCache;
-      
-      if (!donors) {
-        return null;
+      // Scan the table to get all users
+      const { Items } = await dynamodb.scan({
+        TableName: process.env.REACT_APP_DYNAMODB_TABLE_NAME || process.env.DYNAMODB_TABLE_NAME
+      });
+
+      if (!Items) {
+        setReferralTree([]);
+        return;
       }
       
-      const directReferrals = donors
-        .filter(donor => donor.sponsor.toLowerCase() === address.toLowerCase())
-        .map(async (donor) => {
-          const childReferrals = await fetchReferralTree(donor.address, level + 1, maxLevel, donors);
-          return {
-            address: donor.address,
-            donation: donor.donation,
-            isReferrer: donor.isReferrer,
-            rewardsReceived: donor.rewardsReceived,
-            commissionsEarned: donor.commissionsEarned,
-            startTime: donor.startTime,
-            children: childReferrals || []
-          };
-        });
-
-      const resolvedReferrals = await Promise.all(directReferrals);
-      return resolvedReferrals;
+      // Process the data into a tree structure
+      const processedTree = await processReferralData(Items, address.toLowerCase(), level, maxLevel);
+      setReferralTree(processedTree);
     } catch (error) {
       console.error('Failed to fetch referral tree:', error);
-      return null;
+      setErrorMessage(error.message || 'Failed to fetch referral tree');
+      setShowError(true);
+    } finally {
+      setLoadingTree(false);
     }
+  };
+
+  const processReferralData = async (data, currentAddress, level = 0, maxLevel = 4) => {
+    if (level >= maxLevel || !data || data.length === 0) return null;
+
+    // Get all direct referrals (where sponsor matches the current address)
+    const directReferrals = data
+      .filter(user => user.sponsor.toLowerCase() === currentAddress.toLowerCase())
+      .map(async (user) => {
+        // Recursively get children
+        const childReferrals = await processReferralData(
+          data,
+          user.address.toLowerCase(),
+          level + 1,
+          maxLevel
+        );
+
+        return {
+          address: user.address,
+          donation: user.donation,
+          isReferrer: user.isReferrer,
+          rewardsReceived: user.totalWithdrawn,
+          commissionsEarned: user.commissionsEarned,
+          startTime: user.startTime,
+          children: childReferrals || []
+        };
+      });
+
+    return Promise.all(directReferrals);
   };
 
   const formatDate = (timestamp) => {
@@ -114,9 +138,7 @@ const ReferrerSection = ({
   };
 
   const toggleNode = (address, event) => {
-    // Stop the event from bubbling up to parent nodes
     event.stopPropagation();
-    
     setExpandedNodes(prev => {
       const newSet = new Set(prev);
       if (newSet.has(address)) {
@@ -339,9 +361,9 @@ const ReferrerSection = ({
           <div className="loading-tree">
             Loading referral network...
           </div>
-        ) : propReferralTree ? (
+        ) : referralTree ? (
           <div className="referral-tree">
-            {renderReferralTree(propReferralTree)}
+            {renderReferralTree(referralTree)}
           </div>
         ) : (
           <div className="loading-tree">
@@ -360,4 +382,4 @@ const ReferrerSection = ({
   );
 };
 
-export default ReferrerSection;
+export default ReferrerSection; 

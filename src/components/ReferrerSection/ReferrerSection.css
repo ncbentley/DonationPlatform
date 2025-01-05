@@ -2,6 +2,8 @@
 .referrer-info-section {
   margin: 1rem 0;
   width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .referrer-info-section h2,
@@ -23,6 +25,8 @@
   box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
   border: 1px solid rgba(255, 215, 0, 0.1);
   width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .fee-display {
@@ -210,22 +214,33 @@
 @media (max-width: 768px) {
   .referral-link-row {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 0.5rem;
+    margin-bottom: 1rem;
   }
 
   .referral-link-label {
     min-width: auto;
+    margin-bottom: 0.25rem;
   }
 
   .referral-link-input-group {
     width: 100%;
+    flex-direction: column;
+  }
+
+  .referral-link-input {
+    width: 100%;
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    height: auto;
   }
 
   .copy-button {
     width: 100%;
     padding: 0.6rem;
-    height: 36px;
+    height: auto;
+    margin-top: 0.25rem;
   }
 
   .fee-amount {
@@ -234,11 +249,12 @@
 
   .commission-stats {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
+    gap: 1rem;
+    padding: 0 0.5rem;
   }
 
   .commission-stat-card {
-    padding: 1rem;
+    padding: 1.25rem;
   }
 
   .commission-stat-card h3 {
@@ -247,6 +263,169 @@
 
   .commission-stat-card p {
     font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .referral-tree {
+    padding: 0.5rem;
+  }
+
+  .referral-info {
+    padding: 0.75rem;
+  }
+
+  .referral-content {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .referral-details {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .referral-info .stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+  }
+
+  .referral-info .address {
+    font-size: 0.85rem;
+    word-break: break-all;
+  }
+
+  .referral-tree-section {
+    padding: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .referral-tree {
+    margin-top: 0.5rem;
+  }
+
+  .referral-tree ul {
+    padding-left: 0.5rem;
+  }
+
+  .referral-node {
+    margin: 0.25rem 0;
+    padding: 0.5rem;
+  }
+
+  .referral-info {
+    padding: 0.5rem;
+    border-left-width: 2px;
+    margin-left: 0.25rem;
+  }
+
+  .referral-info:hover {
+    border-left-width: 2px;
+    padding-left: 0.5rem;
+  }
+
+  .referral-details {
+    gap: 0.5rem;
+  }
+
+  .referral-info .stats {
+    gap: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .referral-info .stats span {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .referrer-badge {
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+
+  .commission-stats {
+    margin: 0.5rem;
+  }
+
+  .commission-stat-card {
+    margin-bottom: 0.5rem;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .referrer-info-section h2,
+  .referrer-info-card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .referral-link-section {
+    padding: 0 0.5rem;
+  }
+
+  .commission-stat-card {
+    padding: 1rem;
+  }
+
+  .commission-stat-card h3 {
+    font-size: 0.9rem;
+  }
+
+  .commission-stat-card p {
+    font-size: 1.1rem;
+  }
+
+  .activate-button,
+  .claim-button {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .referral-tree-section {
+    padding: 0.25rem;
+  }
+
+  .referral-tree ul {
+    padding-left: 0.25rem;
+  }
+
+  .referral-node {
+    padding: 0.25rem;
+  }
+
+  .referral-info {
+    padding: 0.25rem;
+    gap: 0.25rem;
+  }
+
+  .referral-info .address {
+    font-size: 0.75rem;
+  }
+
+  .referral-info .stats {
+    font-size: 0.75rem;
+  }
+
+  .referral-info .stats span {
+    padding: 0.15rem 0.35rem;
+  }
+
+  .commission-stat-card {
+    padding: 0.75rem;
+  }
+
+  .commission-stat-card h3 {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .commission-stat-card p {
+    font-size: 1rem;
+    margin-bottom: 0.35rem;
   }
 }
 
@@ -255,18 +434,27 @@
   padding: 1rem;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
 }
 
 .referral-tree {
-  margin-top: 1rem;
-  overflow-x: auto;
+  width: 100%;
+  min-width: min-content;
+  max-width: 100%;
+  padding-right: 1rem;
+  display: table;
 }
 
 .referral-tree ul {
   list-style: none;
   padding-left: 2rem;
   margin: 0;
-  overflow: hidden;
+  width: 100%;
+  max-width: calc(100% - 2rem);
+  box-sizing: border-box;
 }
 
 .referral-node {
@@ -276,6 +464,11 @@
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+  width: 100%;
+  min-width: min-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: table;
 }
 
 .referral-node:hover {
@@ -290,9 +483,11 @@
   border-left-width: 3px;
   border-left-style: solid;
   margin-left: 0.5rem;
-  width: 100%;
+  width: auto;
+  min-width: min-content;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .referral-info .address {
@@ -308,6 +503,9 @@
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  min-width: min-content;
+  width: auto;
+  box-sizing: border-box;
 }
 
 .referral-info .stats {
@@ -316,6 +514,7 @@
   font-size: 0.9rem;
   color: #ccc;
   flex-wrap: wrap;
+  min-width: min-content;
 }
 
 .referrer-badge {
@@ -357,8 +556,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  min-width: 0;
-  width: 100%;
+  min-width: min-content;
+  width: auto;
+  box-sizing: border-box;
 }
 
 .referral-info:hover {
@@ -390,6 +590,84 @@
 
   .referral-link-container {
     padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .referral-tree-section {
+    padding: 0.5rem;
+    margin: 1rem -0.5rem;
+    width: calc(100% + 1rem);
+    border-radius: 0;
+  }
+
+  .referral-tree {
+    padding-right: 0.5rem;
+  }
+
+  .referral-tree ul {
+    padding-left: 1rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  .referral-node {
+    width: calc(100% - 0.5rem);
+  }
+
+  .referral-info {
+    padding: 0.5rem;
+    margin-left: 0.25rem;
+  }
+
+  .referral-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .referral-info .stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+    width: 100%;
+  }
+
+  .referral-info .stats span {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .referral-info .address {
+    font-size: 0.85rem;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 480px) {
+  .referral-tree-section {
+    margin: 1rem -1rem;
+    width: calc(100% + 2rem);
+  }
+
+  .referral-tree ul {
+    padding-left: 0.5rem;
+  }
+
+  .referral-node {
+    padding: 0.25rem;
+  }
+
+  .referral-info {
+    padding: 0.25rem;
+    gap: 0.25rem;
   }
 }
   

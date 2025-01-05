@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'DonationEventListener Lambda Function with EventBridge trigger'
+
+Parameters:
+  ProviderUrl:
+    Type: String
+    Description: HTTP URL for Web3 provider
+  ContractAddress:
+    Type: String
+    Description: Smart contract address
+  StartingBlock:
+    Type: String
+    Description: Fallback starting block number if no last processed block is found
+    Default: '0'
+  DeploymentBucket:
+    Type: String
+    Description: S3 bucket containing the Lambda deployment package
+  DonorTableName:
+    Type: String
+    Description: Name of the existing donor network DynamoDB table
+    Default: donor_network_table
+  MetadataTableName:
+    Type: String
+    Description: Name of the existing event metadata DynamoDB table
+    Default: event_metadata
+
+Resources:
+  DonationEventListenerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: donation-event-listener
+      Handler: donationEventListener.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref DeploymentBucket
+        S3Key: donation-event-listener.zip
+      Runtime: nodejs18.x
+      Timeout: 300
+      MemorySize: 256
+      Environment:
+        Variables:
+          WEB3_PROVIDER_URL: !Ref ProviderUrl
+          CONTRACT_ADDRESS: !Ref ContractAddress
+          STARTING_BLOCK: !Ref StartingBlock
+          DYNAMODB_TABLE_NAME: !Ref DonorTableName
+          METADATA_TABLE_NAME: !Ref MetadataTableName
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Scan
+                Resource: 
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DonorTableName}"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MetadataTableName}"
+
+  EventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Trigger donation event listener every 5 minutes"
+      ScheduleExpression: "rate(5 minutes)"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt DonationEventListenerFunction.Arn
+          Id: "DonationEventListener"
+
+  EventRulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DonationEventListenerFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt EventRule.Arn
+
+Outputs:
+  FunctionArn:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt DonationEventListenerFunction.Arn 
