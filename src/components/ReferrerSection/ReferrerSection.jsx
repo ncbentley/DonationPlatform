@@ -4,10 +4,16 @@ import ErrorPopup from '../ErrorPopup/ErrorPopup';
 import TransactionConfirmPopup from '../TransactionConfirmPopup/TransactionConfirmPopup';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity";
+import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity";
 
 // Initialize DynamoDB
 const dynamodb = DynamoDBDocument.from(new DynamoDB({
-  region: process.env.REACT_APP_AWS_REGION || 'us-east-2'
+  region: process.env.REACT_APP_AWS_REGION || 'us-east-2',
+  credentials: fromCognitoIdentityPool({
+    client: new CognitoIdentityClient({ region: process.env.REACT_APP_AWS_REGION || 'us-east-2' }),
+    identityPoolId: process.env.REACT_APP_IDENTITY_POOL_ID // 'us-east-2:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+  })
 }));
 
 const ReferrerSection = ({ 
@@ -96,27 +102,27 @@ const ReferrerSection = ({
   };
 
   const processReferralData = async (data, currentAddress, level = 0, maxLevel = 4) => {
-    if (level >= maxLevel || !data || data.length === 0) return null;
+    if (level >= maxLevel || !data || data.length === 0 || !currentAddress) return null;
 
     // Get all direct referrals (where sponsor matches the current address)
     const directReferrals = data
-      .filter(user => user.sponsor.toLowerCase() === currentAddress.toLowerCase())
+      .filter(user => user?.sponsor?.toLowerCase() === currentAddress?.toLowerCase() && user?.address)
       .map(async (user) => {
         // Recursively get children
         const childReferrals = await processReferralData(
           data,
-          user.address.toLowerCase(),
+          user.address?.toLowerCase(),
           level + 1,
           maxLevel
         );
 
         return {
-          address: user.address,
-          donation: user.donation,
-          isReferrer: user.isReferrer,
-          rewardsReceived: user.totalWithdrawn,
-          commissionsEarned: user.commissionsEarned,
-          startTime: user.startTime,
+          address: user.address || 'Unknown',
+          donation: user.donation || 0,
+          isReferrer: user.isReferrer || false,
+          rewardsReceived: user.totalWithdrawn || 0,
+          commissionsEarned: user.commissionsEarned || 0,
+          startTime: user.startTime || Date.now(),
           children: childReferrals || []
         };
       });
