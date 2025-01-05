@@ -113,7 +113,7 @@ const contractABI = [
 
 // Initialize DynamoDB
 const dynamodb = DynamoDBDocument.from(new DynamoDB({
-  region: process.env.AWS_LAMBDA_REGION || 'us-east-2'
+  region: 'us-east-2'
 }));
 
 // Initialize Web3 with HTTP provider for querying past events
