@@ -10,8 +10,8 @@ Parameters:
     Description: Smart contract address
   StartingBlock:
     Type: String
-    Description: Fallback starting block number if no last processed block is found
-    Default: '0'
+    Description: The block number to start processing events from (optional)
+    Default: "0"
   DeploymentBucket:
     Type: String
     Description: S3 bucket containing the Lambda deployment package

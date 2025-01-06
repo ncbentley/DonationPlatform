@@ -10,19 +10,19 @@ const contractABI = [
             {
                 "indexed": true,
                 "internalType": "address",
-                "name": "donor",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "sponsor",
+                "name": "user",
                 "type": "address"
             },
             {
                 "indexed": false,
                 "internalType": "uint256",
                 "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "duration",
                 "type": "uint256"
             }
         ],
@@ -41,6 +41,62 @@ const contractABI = [
         ],
         "name": "ReferrerActivated",
         "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "users",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "sponsor",
+                "type": "address"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "startTime",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "duration",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "totalWithdrawn",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "lastPayoutTime",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "payoutsClaimed",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct DonationPlatform.Donation",
+                "name": "donation",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
     },
     {
         "inputs": [],
@@ -75,6 +131,11 @@ const contractABI = [
                 "internalType": "uint256",
                 "name": "totalWithdrawn",
                 "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "isReferrer",
+                "type": "bool"
             }
         ],
         "stateMutability": "view",
@@ -125,6 +186,11 @@ const web3 = new Web3(new Web3.providers.HttpProvider(process.env.WEB3_PROVIDER_
 const contract = new web3.eth.Contract(contractABI, process.env.CONTRACT_ADDRESS);
 
 console.log('Contract address:', process.env.CONTRACT_ADDRESS);
+// Log detailed event information
+const eventDefinitions = contract.options.jsonInterface.filter(x => x.type === 'event');
+console.log('Event definitions:', JSON.stringify(eventDefinitions, null, 2));
+console.log('Available event names:', eventDefinitions.map(x => x.name));
+console.log('Event signatures:', eventDefinitions.map(x => web3.eth.abi.encodeEventSignature(x)));
 
 const BLOCK_CHUNK_SIZE = 200;
 const METADATA_TABLE = process.env.METADATA_TABLE_NAME;
@@ -185,17 +251,15 @@ async function getLastProcessedBlock() {
       return currentBlock;
     }
 
-    // If no data exists, start from the configured starting block
-    const startingBlock = parseInt(process.env.STARTING_BLOCK || '0');
-    console.log('No existing data found. Starting from configured block:', startingBlock);
-    return startingBlock;
+    // If no data exists, start from block 0
+    console.log('No existing data found. Starting from block 0');
+    return 0;
   } catch (error) {
     console.error('Error getting last processed block:', error);
     console.error('Error details:', JSON.stringify(error, null, 2));
-    // In case of error, safely start from the configured starting block
-    const startingBlock = parseInt(process.env.STARTING_BLOCK || '0');
-    console.log('Using fallback starting block:', startingBlock);
-    return startingBlock;
+    // In case of error, safely start from block 0
+    console.log('Using fallback starting block: 0');
+    return 0;
   }
 }
 
@@ -213,54 +277,106 @@ async function updateLastProcessedBlock(blockNumber) {
   }
 }
 
+// Add function to verify event existence
+async function verifyEvents(fromBlock, toBlock) {
+  console.log('\nVerifying events...');
+  // Try getting any kind of event to verify connection
+  const allEvents = await contract.getPastEvents('allEvents', { fromBlock, toBlock });
+  console.log(`Total events found in range: ${allEvents.length}`);
+  if (allEvents.length > 0) {
+    console.log('First event details:', JSON.stringify(allEvents[0], null, 2));
+    console.log('Event types found:', [...new Set(allEvents.map(e => e.event))]);
+    console.log('Event signatures found:', [...new Set(allEvents.map(e => e.raw.topics[0]))]);
+  }
+  return allEvents;
+}
+
 async function processEvents(fromBlock, toBlock) {
   try {
+    console.log(`\nFetching events from block ${fromBlock} to ${toBlock}...`);
+    
+    // First verify we can get any events
+    await verifyEvents(fromBlock, toBlock);
+    
     // Get all relevant events with retry logic
     const [donationEvents, referrerEvents] = await Promise.all([
       withRetry(() => contract.getPastEvents('DonationMade', { fromBlock, toBlock })),
       withRetry(() => contract.getPastEvents('ReferrerActivated', { fromBlock, toBlock }))
     ]);
 
+    console.log(`Found ${donationEvents.length} donation events and ${referrerEvents.length} referrer events`);
+
     // Process donation events in parallel batches
     for (let i = 0; i < donationEvents.length; i += PARALLEL_BATCH_SIZE) {
       const batch = donationEvents.slice(i, i + PARALLEL_BATCH_SIZE);
+      console.log(`Processing donation batch ${i / PARALLEL_BATCH_SIZE + 1} of ${Math.ceil(donationEvents.length / PARALLEL_BATCH_SIZE)}`);
+      
       await Promise.all(batch.map(async (event) => {
-        const { donor, sponsor, amount } = event.returnValues;
-        const [userDetails, referrerData] = await Promise.all([
-          withRetry(() => contract.methods.getUserDetails().call({ from: donor })),
-          withRetry(() => contract.methods.referrers(donor).call())
-        ]);
+        const { user, amount, duration } = event.returnValues;
+        console.log(`Processing donation from ${user}, amount: ${amount}, duration: ${duration}`);
+        
+        try {
+          const [userDetails, referrerData, userData] = await Promise.all([
+            withRetry(() => contract.methods.getUserDetails().call({from: user})),
+            withRetry(() => contract.methods.referrers(user).call()),
+            withRetry(() => contract.methods.users(user).call())
+          ]);
+          
+          console.log('User details from contract:', userDetails);
+          console.log('Referrer data from contract:', referrerData);
+          console.log('User data from contract:', userData);
 
-        await dynamodb.put({
-          TableName: DONOR_TABLE,
-          Item: {
-            address: donor.toLowerCase(),
-            sponsor: sponsor.toLowerCase(),
+          const item = {
+            address: user.toLowerCase(),
+            sponsor: userData.sponsor.toLowerCase(),
             donation: parseInt(amount) / 10**18,
+            duration: parseInt(duration),
             isReferrer: referrerData.isActive,
-            totalWithdrawn: parseInt(userDetails.totalWithdrawn) / 10**18,
+            totalWithdrawn: parseInt(userDetails[5]) / 10**18,  // totalWithdrawn is the 6th return value
             commissionsEarned: parseInt(referrerData.commissionEarned) / 10**18,
-            startTime: parseInt(userDetails[2]) * 1000
-          }
-        });
+            startTime: parseInt(userDetails[2]) * 1000  // startTime is the 3rd return value
+          };
+          
+          console.log('Storing DynamoDB item:', item);
+
+          await dynamodb.put({
+            TableName: DONOR_TABLE,
+            Item: item
+          });
+          console.log('Successfully stored donor data for address:', user.toLowerCase());
+        } catch (error) {
+          console.error(`Error processing donation event for donor ${user}:`, error);
+          throw error;
+        }
       }));
     }
 
     // Process referrer events in parallel batches
     for (let i = 0; i < referrerEvents.length; i += PARALLEL_BATCH_SIZE) {
       const batch = referrerEvents.slice(i, i + PARALLEL_BATCH_SIZE);
+      console.log(`Processing referrer batch ${i / PARALLEL_BATCH_SIZE + 1} of ${Math.ceil(referrerEvents.length / PARALLEL_BATCH_SIZE)}`);
+      
       await Promise.all(batch.map(async (event) => {
         const { referrer } = event.returnValues;
-        const referrerData = await withRetry(() => contract.methods.referrers(referrer).call());
+        console.log(`Processing referrer activation for ${referrer}`);
         
-        await dynamodb.update({
-          TableName: DONOR_TABLE,
-          Key: { address: referrer.toLowerCase() },
-          UpdateExpression: 'SET isReferrer = :isReferrer',
-          ExpressionAttributeValues: {
-            ':isReferrer': true
-          }
-        });
+        try {
+          const referrerData = await withRetry(() => contract.methods.referrers(referrer).call());
+          console.log('Referrer data from contract:', referrerData);
+          
+          await dynamodb.update({
+            TableName: DONOR_TABLE,
+            Key: { address: referrer.toLowerCase() },
+            UpdateExpression: 'SET isReferrer = :isReferrer',
+            ExpressionAttributeValues: {
+              ':isReferrer': true
+            }
+          });
+          console.log('Successfully updated referrer status for:', referrer.toLowerCase());
+        } catch (error) {
+          console.error(`Error processing referrer event for ${referrer}:`, error);
+          throw error;
+        }
       }));
     }
 
@@ -281,10 +397,15 @@ exports.handler = async (event) => {
 
     const currentBlock = await withRetry(() => web3.eth.getBlockNumber());
     const lastProcessedBlock = await getLastProcessedBlock();
+    
+    // For initial testing, only process last 5000 blocks if starting from 0
+    const effectiveStartBlock = lastProcessedBlock === 0 ? Math.max(currentBlock - 5000, 0) : lastProcessedBlock + 1;
+    console.log(`Using effective start block: ${effectiveStartBlock} (last processed: ${lastProcessedBlock})`);
+    
     let processedEvents = 0;
 
     // Process events in chunks with delay between chunks
-    for (let fromBlock = lastProcessedBlock + 1; fromBlock <= currentBlock; fromBlock += BLOCK_CHUNK_SIZE) {
+    for (let fromBlock = effectiveStartBlock; fromBlock <= currentBlock; fromBlock += BLOCK_CHUNK_SIZE) {
       const toBlock = Math.min(fromBlock + BLOCK_CHUNK_SIZE - 1, currentBlock);
       console.log(`Processing blocks ${fromBlock} to ${toBlock}`);
       const eventsProcessed = await processEvents(fromBlock, toBlock);

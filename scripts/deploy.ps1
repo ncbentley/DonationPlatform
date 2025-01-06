@@ -109,7 +109,7 @@ try {
     }
 
     # Verify required environment variables
-    $requiredEnvVars = @("WEB3_PROVIDER_URL", "CONTRACT_ADDRESS", "STARTING_BLOCK")
+    $requiredEnvVars = @("WEB3_PROVIDER_URL", "CONTRACT_ADDRESS")
     foreach ($var in $requiredEnvVars) {
         if (-not (Get-Item "env:$var" -ErrorAction SilentlyContinue)) {
             Write-Host "Error: Missing required environment variable: $var"
@@ -218,7 +218,6 @@ try {
         --parameter-overrides `
             ProviderUrl=$env:WEB3_PROVIDER_URL `
             ContractAddress=$env:CONTRACT_ADDRESS `
-            StartingBlock=$env:STARTING_BLOCK `
             DeploymentBucket=$BUCKET_NAME `
             DonorTableName="donor_network_table" `
             MetadataTableName="event_metadata"

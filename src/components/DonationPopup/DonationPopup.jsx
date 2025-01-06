@@ -29,12 +29,13 @@ const DonationPopup = ({
   const [swapUrl, setSwapUrl] = useState('');
   const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
   const [showSponsorWarning, setShowSponsorWarning] = useState(false);
+  const [depositFeePercent, setDepositFeePercent] = useState(3);
 
   const calculateTotals = useCallback(() => {
-    const depositFee = (donationAmount * 3) / 100; // 3% fee
+    const depositFee = (donationAmount * depositFeePercent) / 100;
     const totalUsd = donationAmount + depositFee;
     return { depositFee, totalUsd };
-  }, [donationAmount]);
+  }, [donationAmount, depositFeePercent]);
 
   const checkUsdtBalance = useCallback(async () => {
     try {
@@ -74,15 +75,23 @@ const DonationPopup = ({
   useEffect(() => {
     let mounted = true;
     
-    const initializeContract = () => {
+    const initializeContract = async () => {
       if (!mounted) return;
       
       if (!contract?.methods || !wallet?.provider) {
         setErrorMessage("Please wait for wallet connection to complete...");
       } else {
-        setErrorMessage("");
-        const usdtAddress = process.env.REACT_APP_USDT_CONTRACT_ADDRESS;
-        setSwapUrl(`https://pancakeswap.finance/swap?outputCurrency=${usdtAddress}`);
+        try {
+          const fee = await contract.methods.depositFeePercent().call();
+          setDepositFeePercent(parseInt(fee));
+          setErrorMessage("");
+          const usdtAddress = process.env.REACT_APP_USDT_CONTRACT_ADDRESS;
+          setSwapUrl(`https://pancakeswap.finance/swap?outputCurrency=${usdtAddress}`);
+        } catch (error) {
+          console.error("Failed to fetch deposit fee:", error);
+          setErrorMessage("Failed to fetch deposit fee from contract");
+          setShowError(true);
+        }
       }
     };
 
@@ -161,7 +170,7 @@ const DonationPopup = ({
       details: {
         amount: donationAmount,
         sponsor: sponsorAddress,
-        feePercent: 3,
+        feePercent: depositFeePercent,
         totalAmount: calculateTotals().totalUsd
       }
     });
@@ -175,7 +184,7 @@ const DonationPopup = ({
       details: {
         amount: donationAmount,
         sponsor: sponsorAddress,
-        feePercent: 3,
+        feePercent: depositFeePercent,
         totalAmount: calculateTotals().totalUsd
       }
     });
@@ -209,7 +218,7 @@ const DonationPopup = ({
       // Calculate amounts in USDT decimals (18 decimals)
       // Convert to wei values properly to avoid scientific notation
       const baseAmount = web3.utils.toWei(donationAmount.toString(), 'ether');
-      const totalAmount = web3.utils.toWei((donationAmount * 1.03).toString(), 'ether');
+      const totalAmount = web3.utils.toWei((donationAmount * (1 + depositFeePercent/100)).toString(), 'ether');
 
       if (!usdtContract || !usdtContract.methods) {
         throw new Error("USDT contract not initialized. Please wait for wallet connection to complete.");

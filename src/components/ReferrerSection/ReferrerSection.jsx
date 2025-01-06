@@ -8,11 +8,19 @@ import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity";
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity";
 
 // Initialize DynamoDB
+const IDENTITY_POOL_ID = process.env.REACT_APP_IDENTITY_POOL_ID;
+console.log('AWS Region:', process.env.REACT_APP_AWS_REGION || 'us-east-2');
+console.log('Identity Pool ID:', IDENTITY_POOL_ID);
+
+if (!IDENTITY_POOL_ID) {
+  console.error('Missing REACT_APP_IDENTITY_POOL_ID environment variable');
+}
+
 const dynamodb = DynamoDBDocument.from(new DynamoDB({
   region: process.env.REACT_APP_AWS_REGION || 'us-east-2',
   credentials: fromCognitoIdentityPool({
     client: new CognitoIdentityClient({ region: process.env.REACT_APP_AWS_REGION || 'us-east-2' }),
-    identityPoolId: process.env.REACT_APP_IDENTITY_POOL_ID // 'us-east-2:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+    identityPoolId: IDENTITY_POOL_ID
   })
 }));
 
