@@ -51,7 +51,7 @@ const ReferrerSection = ({
     if (wallet?.accounts?.[0]?.address && wallet.accounts[0].address !== previousAccountRef.current) {
       previousAccountRef.current = wallet.accounts[0].address;
       setReferralLink(`${window.location.origin}${window.location.pathname}?ref=${wallet.accounts[0].address}`);
-      setLandingPageLink(`https://truewealthprosperitynetwork.online?ref=${wallet.accounts[0].address}`);
+      setLandingPageLink(`https://twpn.online?ref=${wallet.accounts[0].address}`);
     }
   }, [wallet]);
 
