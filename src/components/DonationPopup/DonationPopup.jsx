@@ -326,7 +326,7 @@ const DonationPopup = ({
             <h3>Transaction Summary</h3>
             <div className="summary-grid">
               <p>Membership Amount: <span>${donationAmount}</span></p>
-              <p>Deposit Fee (3%): <span>${calculateTotals().depositFee.toFixed(2)}</span></p>
+              <p>Deposit Fee ({depositFeePercent}%): <span>${calculateTotals().depositFee.toFixed(2)}</span></p>
               <p>Total USD: <span>${calculateTotals().totalUsd.toFixed(2)}</span></p>
             </div>
           </div>

@@ -35,7 +35,7 @@ const Dashboard = ({
         <>
           <div className="summary-section">
             <div className="summary-card">
-              <h3>Total Membership Fees</h3>
+              <h3>Total Sales</h3>
               <p>${(15300 + actualTotalDonated).toLocaleString()}</p>
             </div>
             <div className="summary-card">
