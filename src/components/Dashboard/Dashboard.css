@@ -45,6 +45,7 @@
 
 .dashboard-content {
   min-height: 400px;
+  padding: 20px;
 }
 
 .summary-section {
@@ -133,4 +134,40 @@
   width: 16px;
   height: 16px;
   cursor: pointer;
+}
+
+.premium-link-section {
+  background: rgba(25, 25, 25, 0.95);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.premium-link-section h3 {
+  color: #ffd700;
+  margin-bottom: 10px;
+}
+
+.premium-link-section p {
+  color: #ffffff;
+  margin-bottom: 15px;
+}
+
+.premium-link {
+  display: inline-block;
+  background: linear-gradient(145deg, #ffd700, #ffb700);
+  color: #000000;
+  padding: 12px 24px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.premium-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 215, 0, 0.2);
 }

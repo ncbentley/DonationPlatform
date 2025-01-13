@@ -45,16 +45,31 @@ const Dashboard = ({
           </div>
 
           {hasActivePlan ? (
-            <UserDonation 
-              myDonation={myDonation}
-              myDonationPlan={myDonationPlan}
-              nextRewardDate={nextRewardDate}
-              nextRewardAmount={nextRewardAmount}
-              isReferrer={isReferrer}
-              handleActivateReferrer={handleActivateReferrer}
-              setShowClaimRewardPopup={setShowClaimRewardPopup}
-              contract={contract}
-            />
+            <>
+              <UserDonation 
+                myDonation={myDonation}
+                myDonationPlan={myDonationPlan}
+                nextRewardDate={nextRewardDate}
+                nextRewardAmount={nextRewardAmount}
+                isReferrer={isReferrer}
+                handleActivateReferrer={handleActivateReferrer}
+                setShowClaimRewardPopup={setShowClaimRewardPopup}
+                contract={contract}
+              />
+              {myDonation >= 1000 && (
+                <div className="premium-link-section">
+                  <h3>Premium Member Access</h3>
+                  <a 
+                    href="https://t.me/+-37sTnfSVG4wNDIx" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="premium-link"
+                  >
+                    Access Exclusive Live Trading Sessions with Kelli
+                  </a>
+                </div>
+              )}
+            </>
           ) : (
             <DonationPlans 
               onSelectPlan={setSelectedPlan}
