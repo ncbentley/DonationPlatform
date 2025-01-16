@@ -46,6 +46,17 @@ const Dashboard = ({
 
           {hasActivePlan ? (
             <>
+              <div className="premium-link-section">
+                <h3>Kelli's Trading Sessions 2024</h3>
+                <a 
+                  href="https://youtube.com/playlist?list=PLW1C_mJiV3XhIb2v5cMCrOZyutG0eytDo&si=SZFtjwxfF4Udnet3" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="premium-link"
+                >
+                  Access Trading Sessions
+                </a>
+              </div>
               <UserDonation 
                 myDonation={myDonation}
                 myDonationPlan={myDonationPlan}
