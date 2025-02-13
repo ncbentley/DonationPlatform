@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './ReferrerSection.css';
 import ErrorPopup from '../ErrorPopup/ErrorPopup';
 import TransactionConfirmPopup from '../TransactionConfirmPopup/TransactionConfirmPopup';
@@ -9,8 +9,6 @@ import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-id
 
 // Initialize DynamoDB
 const IDENTITY_POOL_ID = process.env.REACT_APP_IDENTITY_POOL_ID;
-console.log('AWS Region:', process.env.REACT_APP_AWS_REGION || 'us-east-2');
-console.log('Identity Pool ID:', IDENTITY_POOL_ID);
 
 if (!IDENTITY_POOL_ID) {
   console.error('Missing REACT_APP_IDENTITY_POOL_ID environment variable');
@@ -23,6 +21,79 @@ const dynamodb = DynamoDBDocument.from(new DynamoDB({
     identityPoolId: IDENTITY_POOL_ID
   })
 }));
+
+// Move this outside component
+const fetchReferralTreeFromDB = async (address, processData, onProgress) => {
+  try {
+    let allItems = [];
+    let lastEvaluatedKey = null;
+    let totalScanned = 0;
+
+    const tableName = process.env.REACT_APP_DYNAMODB_TABLE_NAME || process.env.DYNAMODB_TABLE_NAME;
+    if (!tableName) {
+      throw new Error('DynamoDB table name not configured');
+    }
+    
+    // Paginated scan
+    do {
+      // Create scan params, removing any undefined/null values
+      const params = {
+        TableName: tableName,
+        Limit: 100
+      };
+
+      // Only add ExclusiveStartKey if it exists and has valid values
+      if (lastEvaluatedKey && Object.keys(lastEvaluatedKey).length > 0) {
+        params.ExclusiveStartKey = lastEvaluatedKey;
+      }
+
+      try {
+        const response = await dynamodb.scan(params);
+        
+        // Ensure we have a valid response
+        if (!response) {
+          console.error('No response from DynamoDB scan');
+          break;
+        }
+
+        const Items = Array.isArray(response.Items) ? response.Items : [];
+        const LastEvaluatedKey = response.LastEvaluatedKey && Object.keys(response.LastEvaluatedKey).length > 0 
+          ? response.LastEvaluatedKey 
+          : null;
+        const ScannedCount = typeof response.ScannedCount === 'number' ? response.ScannedCount : 0;
+
+        if (Items.length > 0) {
+          allItems = allItems.concat(Items);
+        }
+        
+        lastEvaluatedKey = LastEvaluatedKey;
+        totalScanned += ScannedCount;
+        
+        // Report progress
+        if (onProgress) {
+          onProgress({
+            itemsFound: allItems.length,
+            scanned: totalScanned,
+            inProgress: !!lastEvaluatedKey
+          });
+        }
+      } catch (scanError) {
+        console.error('Error during scan attempt:', scanError);
+        break; // Exit the loop on error
+      }
+    } while (lastEvaluatedKey);
+
+    if (!allItems.length) {
+      return [];
+    }
+    
+    // Process the complete dataset
+    return await processData(allItems, address.toLowerCase());
+  } catch (error) {
+    console.error('Failed to fetch referral tree:', error);
+    throw error;
+  }
+};
 
 const ReferrerSection = ({ 
   isReferrer, 
@@ -46,70 +117,9 @@ const ReferrerSection = ({
   const [referralTree, setReferralTree] = useState(null);
   const [expandedNodes, setExpandedNodes] = useState(new Set());
   const previousAccountRef = React.useRef(null);
+  const [loadingProgress, setLoadingProgress] = useState({ itemsFound: 0, scanned: 0, inProgress: true });
 
-  useEffect(() => {
-    if (wallet?.accounts?.[0]?.address && wallet.accounts[0].address !== previousAccountRef.current) {
-      previousAccountRef.current = wallet.accounts[0].address;
-      setReferralLink(`${window.location.origin}${window.location.pathname}?ref=${wallet.accounts[0].address}`);
-      setLandingPageLink(`https://twpn.online?ref=${wallet.accounts[0].address}`);
-    }
-  }, [wallet]);
-
-  useEffect(() => {
-    const fetchReferrerData = async () => {
-      if (!contract?.methods || !wallet?.accounts?.[0]?.address) return;
-      
-      try {
-        const fee = await contract.methods.referrerFeeUsd().call();
-        setReferrerFee(parseInt(fee) / 10**18);
-
-        if (isReferrer) {
-          const { earned, paid } = await contract.methods.getCommissionDetails().call({ from: wallet.accounts[0].address });
-          const claimable = earned - paid;
-          setCommissionsEarned(parseInt(earned) / 10**18);
-          setCommissionsPaid(parseInt(paid) / 10**18);
-          setClaimableCommission(parseInt(claimable) / 10**18);
-
-          // Fetch referral tree from DynamoDB
-          await fetchReferralTreeFromDB(wallet.accounts[0].address);
-        }
-      } catch (error) {
-        console.error('Failed to fetch referrer data:', error);
-        setErrorMessage(error.message || 'Failed to fetch referrer data');
-        setShowError(true);
-      }
-    };
-    fetchReferrerData();
-  }, [contract?.methods, wallet, isReferrer]);
-
-  const fetchReferralTreeFromDB = async (address, level = 0, maxLevel = 4) => {
-    if (level >= maxLevel) return null;
-    
-    setLoadingTree(true);
-    try {
-      // Scan the table to get all users
-      const { Items } = await dynamodb.scan({
-        TableName: process.env.REACT_APP_DYNAMODB_TABLE_NAME || process.env.DYNAMODB_TABLE_NAME,
-      });
-
-      if (!Items) {
-        setReferralTree([]);
-        return; 
-      }
-      
-      // Process the data into a tree structure
-      const processedTree = await processReferralData(Items, address.toLowerCase(), level, maxLevel);
-      setReferralTree(processedTree);
-    } catch (error) {
-      console.error('Failed to fetch referral tree:', error);
-      setErrorMessage(error.message || 'Failed to fetch referral tree');
-      setShowError(true);
-    } finally {
-      setLoadingTree(false);
-    }
-  };
-
-  const processReferralData = async (data, currentAddress, level = 0, maxLevel = 4) => {
+  const processReferralData = useCallback(async (data, currentAddress, level = 0, maxLevel = 4) => {
     if (level >= maxLevel || !data || data.length === 0 || !currentAddress) return null;
 
     // Get all direct referrals (where sponsor matches the current address)
@@ -136,7 +146,94 @@ const ReferrerSection = ({
       });
 
     return Promise.all(directReferrals);
-  };
+  }, []);
+
+  useEffect(() => {
+    // Check if we have a valid wallet connection
+    if (wallet?.accounts?.[0]?.address) {
+      setReferralLink(`${window.location.origin}${window.location.pathname}?ref=${wallet.accounts[0].address}`);
+      setLandingPageLink(`https://twpn.online?ref=${wallet.accounts[0].address}`);
+      previousAccountRef.current = wallet.accounts[0].address;
+    }
+  }, [wallet?.accounts?.[0]?.address]); // Only depend on the address
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchContractData = async () => {
+      if (!contract?.methods || !wallet?.accounts?.[0]?.address) return;
+      
+      try {
+        const fee = await contract.methods.referrerFeeUsd().call();
+        if (!mounted) return;
+        setReferrerFee(parseInt(fee) / 10**18);
+
+        if (isReferrer) {
+          const { earned, paid } = await contract.methods.getCommissionDetails().call({ from: wallet.accounts[0].address });
+          if (!mounted) return;
+          
+          const claimable = earned - paid;
+          setCommissionsEarned(parseInt(earned) / 10**18);
+          setCommissionsPaid(parseInt(paid) / 10**18);
+          setClaimableCommission(parseInt(claimable) / 10**18);
+        }
+      } catch (error) {
+        if (!mounted) return;
+        console.error('Failed to fetch contract data:', error);
+        setErrorMessage(error.message || 'Failed to fetch contract data');
+        setShowError(true);
+      }
+    };
+
+    fetchContractData();
+
+    return () => {
+      mounted = false;
+    };
+  }, [contract?.methods, wallet?.accounts?.[0]?.address, isReferrer]);
+
+  // Separate effect for referral tree loading
+  useEffect(() => {
+    let mounted = true;
+
+    // Add loading class to body
+    if (loadingTree) {
+      document.body.classList.add('loading-referral-tree');
+    } else {
+      document.body.classList.remove('loading-referral-tree');
+    }
+
+    const fetchReferralTree = async () => {
+      if (!isReferrer || !wallet?.accounts?.[0]?.address) return;
+      
+      try {
+        setLoadingTree(true);
+        
+        const treeData = await fetchReferralTreeFromDB(
+          wallet.accounts[0].address,
+          (data, address) => processReferralData(data, address),
+          (progress) => setLoadingProgress(progress)
+        );
+        
+        if (!mounted) return;
+        setReferralTree(treeData);
+      } catch (error) {
+        if (!mounted) return;
+        console.error('Failed to fetch referral tree:', error);
+        setErrorMessage(error.message || 'Failed to fetch referral tree');
+        setShowError(true);
+      } finally {
+        if (mounted) setLoadingTree(false);
+      }
+    };
+
+    fetchReferralTree();
+
+    return () => {
+      mounted = false;
+      document.body.classList.remove('loading-referral-tree');
+    };
+  }, [isReferrer, wallet?.accounts?.[0]?.address, processReferralData]);
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
@@ -268,6 +365,13 @@ const ReferrerSection = ({
     }
   };
 
+  const getLoadingMessage = () => {
+    if (!loadingProgress.inProgress && loadingProgress.itemsFound === 0) {
+      return 'No referrals found';
+    }
+    return `Loading referral network... Found ${loadingProgress.itemsFound} members`;
+  };
+
   if (!isReferrer) {
     return (
       <div className="referrer-activation-section">
@@ -369,7 +473,7 @@ const ReferrerSection = ({
         <h3>Your Referral Network</h3>
         {loadingTree ? (
           <div className="loading-tree">
-            Loading referral network...
+            {getLoadingMessage()}
           </div>
         ) : referralTree ? (
           <div className="referral-tree">

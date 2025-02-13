@@ -535,9 +535,43 @@
 }
 
 .loading-tree {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 2rem;
-  color: #ccc;
+  font-size: 1.1rem;
+  color: #ffd700;
+  background: rgba(25, 25, 25, 0.95);
+  border-radius: 8px;
+  margin: 1rem 0;
+  min-height: 100px;
+}
+
+.loading-tree::after {
+  content: '';
+  width: 24px;
+  height: 24px;
+  margin-top: 1rem;
+  border: 2px solid #ffd700;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pause background animation during loading */
+body.loading-referral-tree::after {
+  animation-play-state: paused !important;
+}
+
+body.loading-referral-tree {
+  background-attachment: fixed !important;
 }
 
 .referral-level-0 > li > .referral-info { border-left-color: #00ff9d; }
