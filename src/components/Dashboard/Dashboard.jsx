@@ -3,6 +3,7 @@ import './Dashboard.css';
 import UserDonation from '../UserDonation/UserDonation';
 import DonationPlans from '../DonationPlans/DonationPlans';
 import ReferrerSection from '../ReferrerSection/ReferrerSection';
+import TradeHistoryModal from '../TradeHistoryModal/TradeHistoryModal';
 
 const Dashboard = ({ 
   totalDonated, 
@@ -19,6 +20,7 @@ const Dashboard = ({
   wallet
 }) => {
   const [activeTab, setActiveTab] = useState('membership');
+  const [showTradeHistory, setShowTradeHistory] = useState(false);
   const hasActivePlan = myDonation > 0 && myDonationPlan > 0;
   const actualTotalDonated = totalDonated;
 
@@ -46,16 +48,31 @@ const Dashboard = ({
 
           {hasActivePlan ? (
             <>
-              <div className="premium-link-section">
-                <h3>Kelli's Trading Sessions 2024</h3>
-                <a 
-                  href="https://youtube.com/playlist?list=PLW1C_mJiV3XhIb2v5cMCrOZyutG0eytDo&si=SZFtjwxfF4Udnet3" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="premium-link"
-                >
-                  Access Trading Sessions
-                </a>
+              <div className="trading-sections">
+                <div className="premium-link-section">
+                  <h3>Kelli's Trading Sessions 2024</h3>
+                  <a 
+                    href="https://youtube.com/playlist?list=PLW1C_mJiV3XhIb2v5cMCrOZyutG0eytDo&si=SZFtjwxfF4Udnet3" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="premium-link"
+                  >
+                    Access Trading Sessions
+                  </a>
+                </div>
+                <div className="premium-link-section">
+                  <h3>Recent Trade History</h3>
+                  <a 
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowTradeHistory(true);
+                    }}
+                    className="premium-link"
+                  >
+                    View Recent Trade Results
+                  </a>
+                </div>
               </div>
               <UserDonation 
                 myDonation={myDonation}
@@ -124,6 +141,10 @@ const Dashboard = ({
       <div className="dashboard-content">
         {renderContent()}
       </div>
+
+      {showTradeHistory && (
+        <TradeHistoryModal onClose={() => setShowTradeHistory(false)} />
+      )}
     </div>
   );
 };
