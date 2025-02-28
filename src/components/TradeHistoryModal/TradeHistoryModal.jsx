@@ -2,6 +2,7 @@ import React from 'react';
 import './TradeHistoryModal.css';
 import trade1 from '../../assets/trades1.jpg';
 import trade2 from '../../assets/trades2.jpg';
+import trade3 from '../../assets/trades3.jpg';
 
 const TradeHistoryModal = ({ onClose }) => {
   return (
@@ -14,6 +15,7 @@ const TradeHistoryModal = ({ onClose }) => {
         <div className="trade-history-content">
           <img src={trade1} alt="Trade History 1" />
           <img src={trade2} alt="Trade History 2" />
+          <img src={trade3} alt="Trade History 3" />
         </div>
       </div>
     </div>
