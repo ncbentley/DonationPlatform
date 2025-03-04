@@ -4,6 +4,7 @@ import UserDonation from '../UserDonation/UserDonation';
 import DonationPlans from '../DonationPlans/DonationPlans';
 import ReferrerSection from '../ReferrerSection/ReferrerSection';
 import TradeHistoryModal from '../TradeHistoryModal/TradeHistoryModal';
+import WelcomePopup from '../WelcomePopup/WelcomePopup';
 
 const Dashboard = ({ 
   totalDonated, 
@@ -21,8 +22,16 @@ const Dashboard = ({
 }) => {
   const [activeTab, setActiveTab] = useState('membership');
   const [showTradeHistory, setShowTradeHistory] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const hasActivePlan = myDonation > 0 && myDonationPlan > 0;
   const actualTotalDonated = totalDonated;
+
+  // Show welcome popup when wallet is connected
+  useEffect(() => {
+    if (wallet?.accounts?.[0]?.address) {
+      setShowWelcome(true);
+    }
+  }, [wallet?.accounts?.[0]?.address]);
 
   // If user loses their active plan, switch back to membership tab
   useEffect(() => {
@@ -144,6 +153,10 @@ const Dashboard = ({
 
       {showTradeHistory && (
         <TradeHistoryModal onClose={() => setShowTradeHistory(false)} />
+      )}
+
+      {showWelcome && (
+        <WelcomePopup onClose={() => setShowWelcome(false)} />
       )}
     </div>
   );
